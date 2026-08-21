@@ -2,7 +2,9 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    "ediblebackpacks:upgraded_backpack"
+    {
+      "item": "ediblebackpacks:upgraded_backpack"
+    }
   ],
   "result": {
     "id": "ediblebackpacks:edible_backpack",

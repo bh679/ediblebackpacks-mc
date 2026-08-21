@@ -7,7 +7,9 @@
     "BBB"
   ],
   "key": {
-    "B": "ediblebackpacks:edible_backpack"
+    "B": {
+      "item": "ediblebackpacks:edible_backpack"
+    }
   },
   "result": {
     "id": "ediblebackpacks:upgraded_backpack",
