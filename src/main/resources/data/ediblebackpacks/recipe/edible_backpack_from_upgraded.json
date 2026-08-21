@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "ediblebackpacks:upgraded_backpack"
+  ],
+  "result": {
+    "id": "ediblebackpacks:edible_backpack",
+    "count": 9
+  }
+}

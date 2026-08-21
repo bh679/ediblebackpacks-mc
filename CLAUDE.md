@@ -6,6 +6,10 @@ Eat an `edible_backpack` item → +1 persistent backpack slot (cap 108), shown a
 across**, starting on the column closest to the player's inventory and growing outward
 (`menu/BackpackLayout`).
 
+Two items, both `EdibleBackpackItem` with a different `slotsGranted`: `edible_backpack` (1)
+and `upgraded_backpack` (9). Both non-stackable; they craft into each other (3×3 ⇄ 1).
+Grants are all-or-nothing (`BackpackPolicy.grantFits`) so a 9-grant is never partly wasted.
+
 ## Architecture map
 
 - `storage/BackpackData` — per-player serializable attachment (`registry/ModAttachments`,

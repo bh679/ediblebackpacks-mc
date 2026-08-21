@@ -27,4 +27,13 @@ public final class BackpackPolicy {
     public static int clampUnlocked(int unlocked, int max) {
         return Math.max(0, Math.min(unlocked, max));
     }
+
+    /**
+     * Whether eating an item granting {@code granted} slots fits entirely
+     * under {@code max}. Grants are all-or-nothing so an upgraded (9-slot)
+     * backpack is never partially wasted near the cap.
+     */
+    public static boolean grantFits(int unlocked, int granted, int max) {
+        return unlocked + granted <= max;
+    }
 }

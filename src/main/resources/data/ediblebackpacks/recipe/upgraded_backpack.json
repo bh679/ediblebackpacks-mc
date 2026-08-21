@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "BBB",
+    "BBB",
+    "BBB"
+  ],
+  "key": {
+    "B": "ediblebackpacks:edible_backpack"
+  },
+  "result": {
+    "id": "ediblebackpacks:upgraded_backpack",
+    "count": 1
+  }
+}

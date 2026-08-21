@@ -30,6 +30,16 @@ class BackpackPolicyTest {
     }
 
     @Test
+    void grantsAreAllOrNothing() {
+        assertTrue(BackpackPolicy.grantFits(0, 1, 108));
+        assertTrue(BackpackPolicy.grantFits(99, 9, 108));
+        assertTrue(BackpackPolicy.grantFits(107, 1, 108));
+        // 9-slot upgraded backpack near the cap: refused, not partially wasted.
+        assertFalse(BackpackPolicy.grantFits(100, 9, 108));
+        assertFalse(BackpackPolicy.grantFits(108, 1, 108));
+    }
+
+    @Test
     void clampUnlocked() {
         assertEquals(0, BackpackPolicy.clampUnlocked(-5, 108));
         assertEquals(7, BackpackPolicy.clampUnlocked(7, 108));

@@ -12,7 +12,11 @@ storage by one slot.**
   bundle this mod (e.g. Dungeon Train) can steer the `DEFAULT` policy via
   `EdibleBackpacksApi.setHostDefaultResetOnDeath(boolean)` — an explicit server-config
   `ON`/`OFF` always wins.
-- No crafting recipe of its own: obtainability is left to the host mod / datapacks
+- Backpacks are **non-stackable**, and **compactable**: 3×3 edible backpacks craft into one
+  **Upgraded Backpack** that grants **9 slots** in a single sitting, and one upgraded backpack
+  crafts back into nine singles. Eating is all-or-nothing — near the cap an upgraded backpack
+  is refused rather than partially wasted, so craft it back down and eat singles.
+- No recipe for the base backpack itself: obtainability is left to the host mod / datapacks
   (Dungeon Train rolls it into train container loot).
 
 ## Config (`ediblebackpacks-server.toml`, per-world SERVER config)
