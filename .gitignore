@@ -1,0 +1,24 @@
+# Gradle
+.gradle/
+build/
+
+# Dev run logs (from ./gradlew runClient/runServer | tee)
+run-client.log
+run-server.log
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.eclipse/
+.classpath
+.project
+.settings/
+bin/
+eclipse/
+run/
+
+# OS
+.DS_Store

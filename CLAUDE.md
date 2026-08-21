@@ -1,0 +1,35 @@
+# Edible Backpacks — sibling mod of Dungeon Train
+
+NeoForge 1.21.1 mod (`bh679/ediblebackpacks-mc`, pkg `games.brennan.ediblebackpacks`).
+Eat an `edible_backpack` item → +1 persistent backpack slot (cap 144), shown as two
+8×9 panels flanking the survival inventory screen.
+
+## Architecture map
+
+- `storage/BackpackData` — per-player serializable attachment (`registry/ModAttachments`,
+  `copyOnDeath`): unlocked count + 144-slot `ItemStackHandler` (always full-size; slot
+  indices must stay stable for vanilla container sync).
+- `mixin/InventoryMenuMixin` — appends 144 `menu/BackpackSlot`s to the vanilla
+  `InventoryMenu` on BOTH sides. `BackpackSlot.mayPlace/mayPickup` are the
+  server-authoritative lock; `isActive` is display-only (also hides while the recipe
+  book is open via `client/ClientPanelState`).
+- `client/BackpackScreenPanels` — draws panel chrome on `ContainerScreenEvent.Render.Background`;
+  vanilla renders the slot items itself.
+- `network/SlotCountPayload` — server→client unlocked-count sync (attachments don't
+  auto-sync). Sent on login/respawn/dimension-change/eat (`event/BackpackEvents`).
+- Death policy — `storage/BackpackPolicy.shouldResetOnDeath(configMode, hostDefault)`.
+  Standalone default = persist. Host mods call
+  `EdibleBackpacksApi.setHostDefaultResetOnDeath(true)` to make `DEFAULT` mean reset
+  (Dungeon Train does). Explicit server config `ON`/`OFF` always wins.
+
+## Release contract (Dungeon Train jarJar)
+
+Release asset MUST be `ediblebackpacks-neoforge-<v>.jar` from tag `v<version>` —
+DT's Ivy patternLayout depends on it. `release.yml` is dispatch-only and creates the
+tag; `version-bump.yml` MINOR-bumps on main pushes when PATCH ≠ 0, so releases are
+MINOR-aligned (X.Y.0). Never `git tag` manually.
+
+## Testing
+
+`./gradlew test` (pure-logic: policy + layout math). In-game verification happens in
+the Dungeon Train dev client where the mod is bundled.

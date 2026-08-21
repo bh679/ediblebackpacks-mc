@@ -1,0 +1,125 @@
+name: Release
+
+# Dispatch-only: this workflow CREATES the tag; it is never triggered by a
+# pushed tag. The release asset ediblebackpacks-neoforge-<version>.jar is what
+# Dungeon Train's Ivy repo fetches and bundles via jarJar, so the asset name
+# must stay exactly that (driven by base.archivesName in build.gradle).
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to create + release (e.g. v0.1.0). Created from main HEAD; must NOT already exist and must match mod_version."
+        required: true
+        type: string
+      changelog:
+        description: "Optional release notes. Used natively on GitHub + Modrinth + CurseForge. Blank = GitHub auto-generated notes."
+        required: false
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      RELEASE_TAG: ${{ inputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Verify input tag matches mod_version on main
+        run: |
+          TAG="${RELEASE_TAG#v}"
+          GRADLE_VERSION=$(grep '^mod_version=' gradle.properties | cut -d= -f2)
+          if [ "$TAG" != "$GRADLE_VERSION" ]; then
+            echo "::error::Input tag $RELEASE_TAG does not match mod_version=$GRADLE_VERSION. Bump gradle.properties to $TAG (or dispatch tag=v$GRADLE_VERSION) first."
+            exit 1
+          fi
+          echo "MOD_VERSION=$GRADLE_VERSION" >> "$GITHUB_ENV"
+
+      - name: Check tag does not already exist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/${GITHUB_REPOSITORY}/git/refs/tags/${RELEASE_TAG}" >/dev/null 2>&1; then
+            echo "::error::Tag $RELEASE_TAG already exists on remote. Delete it first or pick a new version."
+            exit 1
+          fi
+
+      - name: Compute prerelease flag from tag
+        id: rel
+        run: |
+          MAJOR="${RELEASE_TAG#v}"; MAJOR="${MAJOR%%.*}"
+          if [ "$MAJOR" -gt 0 ] 2>/dev/null; then
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"   # pre-1.0 = beta
+          fi
+
+      - run: ./gradlew build --no-daemon
+
+      - name: Verify the release asset exists
+        run: |
+          JAR="build/libs/ediblebackpacks-neoforge-${MOD_VERSION}.jar"
+          if [ ! -f "$JAR" ]; then
+            echo "::error::Expected $JAR not found"; ls -la build/libs/; exit 1
+          fi
+          echo "Release asset: $JAR"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Edible Backpacks ${{ env.RELEASE_TAG }}
+          tag_name: ${{ env.RELEASE_TAG }}
+          body: ${{ inputs.changelog }}
+          generate_release_notes: true
+          files: build/libs/ediblebackpacks-neoforge-${{ env.MOD_VERSION }}.jar
+          fail_on_unmatched_files: true
+          prerelease: ${{ steps.rel.outputs.prerelease == 'true' }}
+
+      # Modrinth + CurseForge are opt-in: they publish only when the repo has
+      # both the token secret and the project-id variable. Until then they warn
+      # and skip, so the GitHub release (which Dungeon Train's jarJar bundle
+      # fetches) always succeeds on its own.
+      - name: Check mod-platform publish prerequisites
+        id: publish_check
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+          MODRINTH_PROJECT_ID: ${{ vars.MODRINTH_PROJECT_ID }}
+          CURSEFORGE_PROJECT_ID: ${{ vars.CURSEFORGE_PROJECT_ID }}
+        run: |
+          MR=false; CF=false
+          if [ -n "$MODRINTH_TOKEN" ] && [ -n "$MODRINTH_PROJECT_ID" ]; then MR=true; else echo "::warning::Modrinth secret/variable missing — skipping Modrinth publish."; fi
+          if [ -n "$CURSEFORGE_TOKEN" ] && [ -n "$CURSEFORGE_PROJECT_ID" ]; then CF=true; else echo "::warning::CurseForge secret/variable missing — skipping CurseForge publish."; fi
+          echo "modrinth=$MR" >> "$GITHUB_OUTPUT"
+          echo "curseforge=$CF" >> "$GITHUB_OUTPUT"
+
+      - name: Publish NeoForge jar to Modrinth + CurseForge
+        if: steps.publish_check.outputs.modrinth == 'true' || steps.publish_check.outputs.curseforge == 'true'
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ steps.publish_check.outputs.modrinth == 'true' && vars.MODRINTH_PROJECT_ID || '' }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          curseforge-id: ${{ steps.publish_check.outputs.curseforge == 'true' && vars.CURSEFORGE_PROJECT_ID || '' }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          files: build/libs/ediblebackpacks-neoforge-${{ env.MOD_VERSION }}.jar
+          name: Edible Backpacks ${{ env.RELEASE_TAG }}
+          version: ${{ env.RELEASE_TAG }}
+          version-type: ${{ steps.rel.outputs.prerelease == 'true' && 'beta' || 'release' }}
+          changelog: ${{ inputs.changelog }}
+          loaders: neoforge
+          game-versions: 1.21.1
+          java: 21
+          retry-attempts: 2
+          retry-delay: 10000
+          fail-mode: warn

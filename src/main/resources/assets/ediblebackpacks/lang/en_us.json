@@ -1,0 +1,5 @@
+{
+  "item.ediblebackpacks.edible_backpack": "Edible Backpack",
+  "ediblebackpacks.msg.slots": "Backpack space: %s",
+  "ediblebackpacks.msg.full": "Your backpack is already at its limit"
+}

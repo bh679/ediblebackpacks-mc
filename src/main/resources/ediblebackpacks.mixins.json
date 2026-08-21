@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "games.brennan.ediblebackpacks.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "AbstractContainerMenuAccessor",
+    "InventoryMenuMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
