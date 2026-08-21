@@ -8,7 +8,7 @@ import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
 
 /**
- * One backpack slot appended to the vanilla {@code InventoryMenu}. All 144
+ * One backpack slot appended to the vanilla {@code InventoryMenu}. All 108
  * slots always exist (stable indices for vanilla container sync); locked
  * slots are inactive and refuse interaction.
  *

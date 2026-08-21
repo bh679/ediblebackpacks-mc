@@ -51,20 +51,24 @@ public final class BackpackScreenPanels {
     private static void drawPanel(GuiGraphics g, int guiLeft, int guiTop, int unlocked, boolean right) {
         int slots = BackpackLayout.unlockedOnPanel(unlocked, right);
         if (slots <= 0) return;
-        int rows = BackpackLayout.rowsFor(slots);
 
-        int x0 = guiLeft + (right ? BackpackLayout.RIGHT_X0 : BackpackLayout.LEFT_X0);
-        int y0 = guiTop + BackpackLayout.Y0;
-        int w = BackpackLayout.COLS * BackpackLayout.SLOT;
-        int h = rows * BackpackLayout.SLOT;
-
-        // Panel chrome: bevelled face like the vanilla inventory texture.
-        g.fill(x0 - BORDER, y0 - BORDER, x0 + w + BORDER, y0 + h + BORDER, DARK);
-        g.fill(x0 - BORDER + 1, y0 - BORDER + 1, x0 + w + BORDER - 1, y0 + h + BORDER - 1, LIGHT);
-        g.fill(x0 - BORDER + 2, y0 - BORDER + 2, x0 + w + BORDER - 2, y0 + h + BORDER - 2, FACE);
+        // Panel chrome per COLUMN (fill is down-then-across, so a partially
+        // unlocked panel is a run of full columns + one short column — each
+        // column gets its own bevelled face so the chrome hugs the slots).
+        int cols = BackpackLayout.columnsFor(slots);
+        int base = right ? BackpackLayout.PANEL_SLOTS : 0;
+        for (int c = 0; c < cols; c++) {
+            int colSlots = BackpackLayout.slotsInColumn(slots, c);
+            int cx = guiLeft + BackpackLayout.slotX(base + c * BackpackLayout.ROWS);
+            int cy = guiTop + BackpackLayout.Y0;
+            int w = BackpackLayout.SLOT;
+            int h = colSlots * BackpackLayout.SLOT;
+            g.fill(cx - BORDER, cy - BORDER, cx + w + BORDER, cy + h + BORDER, DARK);
+            g.fill(cx - BORDER + 1, cy - BORDER + 1, cx + w + BORDER - 1, cy + h + BORDER - 1, LIGHT);
+            g.fill(cx - BORDER + 2, cy - BORDER + 2, cx + w + BORDER - 2, cy + h + BORDER - 2, FACE);
+        }
 
         // Slot insets — only for unlocked slots on this panel.
-        int base = right ? BackpackLayout.PANEL_SLOTS : 0;
         for (int i = 0; i < slots; i++) {
             int sx = guiLeft + BackpackLayout.slotX(base + i);
             int sy = guiTop + BackpackLayout.slotY(base + i);

@@ -10,7 +10,7 @@ import net.neoforged.fml.config.ModConfig;
 
 /**
  * Edible Backpacks — eat a backpack, gain a permanent +1 backpack storage
- * slot. Storage renders as two 8×9 panels flanking the vanilla survival
+ * slot. Storage renders as two 6×9 panels flanking the vanilla survival
  * inventory screen (up to {@link games.brennan.ediblebackpacks.menu.BackpackLayout#MAX_SLOTS}
  * slots).
  *

@@ -31,8 +31,8 @@ class BackpackPolicyTest {
 
     @Test
     void clampUnlocked() {
-        assertEquals(0, BackpackPolicy.clampUnlocked(-5, 144));
-        assertEquals(7, BackpackPolicy.clampUnlocked(7, 144));
-        assertEquals(144, BackpackPolicy.clampUnlocked(9999, 144));
+        assertEquals(0, BackpackPolicy.clampUnlocked(-5, 108));
+        assertEquals(7, BackpackPolicy.clampUnlocked(7, 108));
+        assertEquals(108, BackpackPolicy.clampUnlocked(9999, 108));
     }
 }

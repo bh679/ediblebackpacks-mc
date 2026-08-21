@@ -20,7 +20,7 @@ class BackpackLayoutTest {
             int y = BackpackLayout.slotY(i);
             assertTrue(seen.add(((long) x << 32) | (y & 0xffffffffL)), "duplicate pos at " + i);
             if (BackpackLayout.isRightPanel(i)) {
-                assertTrue(x >= BackpackLayout.RIGHT_X0, "right-panel slot left of panel: " + i);
+                assertTrue(x >= BackpackLayout.RIGHT_INNER_X, "right-panel slot left of panel: " + i);
             } else {
                 assertTrue(x < 0, "left-panel slot not at negative x: " + i);
             }
@@ -28,10 +28,26 @@ class BackpackLayoutTest {
     }
 
     @Test
-    void panelSplitIs72_72() {
-        assertFalse(BackpackLayout.isRightPanel(71));
-        assertTrue(BackpackLayout.isRightPanel(72));
-        assertEquals(144, BackpackLayout.MAX_SLOTS);
+    void panelSplitIs54_54() {
+        assertFalse(BackpackLayout.isRightPanel(53));
+        assertTrue(BackpackLayout.isRightPanel(54));
+        assertEquals(108, BackpackLayout.MAX_SLOTS);
+    }
+
+    @Test
+    void fillGoesDownTheClosestColumnFirst() {
+        // First 9 slots: same x (the column nearest the GUI), y walking down.
+        for (int i = 0; i < 9; i++) {
+            assertEquals(BackpackLayout.LEFT_INNER_X, BackpackLayout.slotX(i), "slot " + i);
+            assertEquals(BackpackLayout.Y0 + i * BackpackLayout.SLOT, BackpackLayout.slotY(i));
+        }
+        // Slot 9 starts the next column, one step OUTWARD (further left), back at the top.
+        assertEquals(BackpackLayout.LEFT_INNER_X - BackpackLayout.SLOT, BackpackLayout.slotX(9));
+        assertEquals(BackpackLayout.Y0, BackpackLayout.slotY(9));
+        // Right panel: first column hugs the GUI's right edge and grows rightward.
+        assertEquals(BackpackLayout.RIGHT_INNER_X, BackpackLayout.slotX(54));
+        assertEquals(BackpackLayout.Y0, BackpackLayout.slotY(54));
+        assertEquals(BackpackLayout.RIGHT_INNER_X + BackpackLayout.SLOT, BackpackLayout.slotX(63));
     }
 
     @Test
@@ -39,17 +55,21 @@ class BackpackLayoutTest {
         assertEquals(0, BackpackLayout.unlockedOnPanel(0, false));
         assertEquals(5, BackpackLayout.unlockedOnPanel(5, false));
         assertEquals(0, BackpackLayout.unlockedOnPanel(5, true));
-        assertEquals(72, BackpackLayout.unlockedOnPanel(100, false));
-        assertEquals(28, BackpackLayout.unlockedOnPanel(100, true));
-        assertEquals(72, BackpackLayout.unlockedOnPanel(999, true));
+        assertEquals(54, BackpackLayout.unlockedOnPanel(80, false));
+        assertEquals(26, BackpackLayout.unlockedOnPanel(80, true));
+        assertEquals(54, BackpackLayout.unlockedOnPanel(999, true));
     }
 
     @Test
-    void rowsForRoundsUp() {
-        assertEquals(0, BackpackLayout.rowsFor(0));
-        assertEquals(1, BackpackLayout.rowsFor(1));
-        assertEquals(1, BackpackLayout.rowsFor(8));
-        assertEquals(2, BackpackLayout.rowsFor(9));
-        assertEquals(9, BackpackLayout.rowsFor(72));
+    void columnMathRoundsCorrectly() {
+        assertEquals(0, BackpackLayout.columnsFor(0));
+        assertEquals(1, BackpackLayout.columnsFor(1));
+        assertEquals(1, BackpackLayout.columnsFor(9));
+        assertEquals(2, BackpackLayout.columnsFor(10));
+        assertEquals(6, BackpackLayout.columnsFor(54));
+        assertEquals(9, BackpackLayout.slotsInColumn(54, 0));
+        assertEquals(9, BackpackLayout.slotsInColumn(20, 1));
+        assertEquals(2, BackpackLayout.slotsInColumn(20, 2));
+        assertEquals(0, BackpackLayout.slotsInColumn(20, 3));
     }
 }

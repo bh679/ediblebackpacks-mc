@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Appends the 144 backpack slots to the survival inventory menu on BOTH
+ * Appends the 108 backpack slots to the survival inventory menu on BOTH
  * sides (identical order ⇒ vanilla container slot sync carries contents for
  * free). Locked slots are inert — see {@link BackpackSlot}.
  */

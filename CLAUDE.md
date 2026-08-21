@@ -1,15 +1,17 @@
 # Edible Backpacks — sibling mod of Dungeon Train
 
 NeoForge 1.21.1 mod (`bh679/ediblebackpacks-mc`, pkg `games.brennan.ediblebackpacks`).
-Eat an `edible_backpack` item → +1 persistent backpack slot (cap 144), shown as two
-8×9 panels flanking the survival inventory screen.
+Eat an `edible_backpack` item → +1 persistent backpack slot (cap 108), shown as two
+6×9 panels flanking the survival inventory screen. Slots unlock **down a column, then
+across**, starting on the column closest to the player's inventory and growing outward
+(`menu/BackpackLayout`).
 
 ## Architecture map
 
 - `storage/BackpackData` — per-player serializable attachment (`registry/ModAttachments`,
-  `copyOnDeath`): unlocked count + 144-slot `ItemStackHandler` (always full-size; slot
+  `copyOnDeath`): unlocked count + 108-slot `ItemStackHandler` (always full-size; slot
   indices must stay stable for vanilla container sync).
-- `mixin/InventoryMenuMixin` — appends 144 `menu/BackpackSlot`s to the vanilla
+- `mixin/InventoryMenuMixin` — appends 108 `menu/BackpackSlot`s to the vanilla
   `InventoryMenu` on BOTH sides. `BackpackSlot.mayPlace/mayPickup` are the
   server-authoritative lock; `isActive` is display-only (also hides while the recipe
   book is open via `client/ClientPanelState`).

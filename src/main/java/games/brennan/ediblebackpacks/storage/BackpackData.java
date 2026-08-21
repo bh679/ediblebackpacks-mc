@@ -8,7 +8,7 @@ import net.neoforged.neoforge.items.ItemStackHandler;
 
 /**
  * Per-player backpack attachment payload: how many slots are unlocked (by
- * eating backpacks) plus the backing 144-slot inventory. The handler is always
+ * eating backpacks) plus the backing 108-slot inventory. The handler is always
  * full-size so menu slot indices stay stable; locked slots are simply
  * inactive/refused at the {@code BackpackSlot} level.
  */
