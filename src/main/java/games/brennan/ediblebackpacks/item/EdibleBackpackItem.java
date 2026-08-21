@@ -24,9 +24,9 @@ import net.minecraft.world.level.Level;
  * <p>Non-stackable: a backpack is a bulky object, and stacking would make the
  * compressed variant pointless.</p>
  *
- * <p>Eating is refused unless the FULL grant fits under the cap, so a 9-slot
- * upgraded backpack is never partially wasted. Near the cap, craft one back
- * down into nine singles and eat those.</p>
+ * <p>A grant tops up to the cap rather than being refused outright — see
+ * {@link BackpackPolicy#effectiveGrant} for why partial beats all-or-nothing
+ * here. Eating is only refused once there is no room at all.</p>
  */
 public final class EdibleBackpackItem extends Item {
 
@@ -47,20 +47,19 @@ public final class EdibleBackpackItem extends Item {
         return slotsGranted;
     }
 
-    /** True when the whole grant fits under the cap. */
-    private boolean fits(Player player) {
-        return BackpackPolicy.grantFits(
+    /** Slots this backpack would actually grant the player right now. */
+    private int grantFor(Player player) {
+        return BackpackPolicy.effectiveGrant(
             player.getData(ModAttachments.BACKPACK).unlocked(), slotsGranted, EBConfig.maxSlots());
     }
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        // Refuse to start eating when the grant wouldn't fit (both sides —
-        // maxSlots is a synced SERVER config, so the client check matches).
-        if (!fits(player)) {
+        // Refuse to start eating only at the cap (both sides — maxSlots is a
+        // synced SERVER config, so the client check matches).
+        if (grantFor(player) <= 0) {
             if (!level.isClientSide) {
-                player.displayClientMessage(
-                    Component.translatable("ediblebackpacks.msg.no_room", slotsGranted), true);
+                player.displayClientMessage(Component.translatable("ediblebackpacks.msg.full"), true);
             }
             return InteractionResultHolder.fail(player.getItemInHand(hand));
         }
@@ -69,12 +68,15 @@ public final class EdibleBackpackItem extends Item {
 
     @Override
     public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
-        if (!level.isClientSide && entity instanceof ServerPlayer player && fits(player)) {
-            BackpackData data = player.getData(ModAttachments.BACKPACK);
-            data.setUnlocked(data.unlocked() + slotsGranted);
-            EBNetwork.syncSlotCount(player);
-            player.displayClientMessage(
-                Component.translatable("ediblebackpacks.msg.slots", data.unlocked()), true);
+        if (!level.isClientSide && entity instanceof ServerPlayer player) {
+            int granted = grantFor(player);
+            if (granted > 0) {
+                BackpackData data = player.getData(ModAttachments.BACKPACK);
+                data.setUnlocked(data.unlocked() + granted);
+                EBNetwork.syncSlotCount(player);
+                player.displayClientMessage(
+                    Component.translatable("ediblebackpacks.msg.slots", data.unlocked()), true);
+            }
         }
         return super.finishUsingItem(stack, level, entity);
     }

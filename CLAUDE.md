@@ -7,8 +7,10 @@ across**, starting on the column closest to the player's inventory and growing o
 (`menu/BackpackLayout`).
 
 Two items, both `EdibleBackpackItem` with a different `slotsGranted`: `edible_backpack` (1)
-and `upgraded_backpack` (9). Both non-stackable; they craft into each other (3×3 ⇄ 1).
-Grants are all-or-nothing (`BackpackPolicy.grantFits`) so a 9-grant is never partly wasted.
+and `upgraded_backpack` (9). Both non-stackable; 3×3 singles craft into one upgraded (one-way only — a 9-count result is
+invalid against a max stack size of 1, which is exactly what the reverse recipe would need).
+Grants top up to the cap (`BackpackPolicy.effectiveGrant`) so an upgraded backpack near the
+cap still does something instead of being stranded.
 
 ## Architecture map
 

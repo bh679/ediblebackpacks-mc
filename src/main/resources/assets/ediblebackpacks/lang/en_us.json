@@ -2,5 +2,5 @@
   "item.ediblebackpacks.edible_backpack": "Edible Backpack",
   "item.ediblebackpacks.upgraded_backpack": "Upgraded Backpack",
   "ediblebackpacks.msg.slots": "Backpack space: %s",
-  "ediblebackpacks.msg.no_room": "Not enough backpack space left for this (needs %s)"
+  "ediblebackpacks.msg.full": "Your backpack is already at its limit"
 }

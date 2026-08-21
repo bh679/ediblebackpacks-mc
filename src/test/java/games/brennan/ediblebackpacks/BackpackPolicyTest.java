@@ -30,13 +30,14 @@ class BackpackPolicyTest {
     }
 
     @Test
-    void grantsAreAllOrNothing() {
-        assertTrue(BackpackPolicy.grantFits(0, 1, 108));
-        assertTrue(BackpackPolicy.grantFits(99, 9, 108));
-        assertTrue(BackpackPolicy.grantFits(107, 1, 108));
-        // 9-slot upgraded backpack near the cap: refused, not partially wasted.
-        assertFalse(BackpackPolicy.grantFits(100, 9, 108));
-        assertFalse(BackpackPolicy.grantFits(108, 1, 108));
+    void grantsTopUpToTheCap() {
+        assertEquals(1, BackpackPolicy.effectiveGrant(0, 1, 108));
+        assertEquals(9, BackpackPolicy.effectiveGrant(99, 9, 108));
+        // Near the cap an upgraded backpack grants what's left, not nothing —
+        // there is no craft-back-to-singles escape hatch (non-stackable item).
+        assertEquals(8, BackpackPolicy.effectiveGrant(100, 9, 108));
+        assertEquals(0, BackpackPolicy.effectiveGrant(108, 9, 108));
+        assertEquals(0, BackpackPolicy.effectiveGrant(108, 1, 108));
     }
 
     @Test

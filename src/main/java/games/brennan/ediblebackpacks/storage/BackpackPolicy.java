@@ -29,11 +29,19 @@ public final class BackpackPolicy {
     }
 
     /**
-     * Whether eating an item granting {@code granted} slots fits entirely
-     * under {@code max}. Grants are all-or-nothing so an upgraded (9-slot)
-     * backpack is never partially wasted near the cap.
+     * How many slots eating a {@code granted}-slot backpack actually yields:
+     * the whole grant, or whatever room is left under {@code max}.
+     *
+     * <p>Partial rather than all-or-nothing on purpose. Backpacks are
+     * non-stackable, which makes a "craft one upgraded backpack back into
+     * nine singles" recipe impossible (a crafting result is one stack, and a
+     * count of 9 fails validation against a max stack size of 1). Without
+     * that escape hatch, refusing a partial grant would strand an upgraded
+     * backpack as a dead item for anyone near the cap.</p>
+     *
+     * @return slots actually granted; {@code 0} when already at the cap
      */
-    public static boolean grantFits(int unlocked, int granted, int max) {
-        return unlocked + granted <= max;
+    public static int effectiveGrant(int unlocked, int granted, int max) {
+        return Math.max(0, Math.min(granted, max - unlocked));
     }
 }
