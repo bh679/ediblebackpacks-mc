@@ -29,6 +29,8 @@ public final class BackpackLayout {
     public static final int RIGHT_INNER_X = 176 + GAP;      // 184
     /** Top of both panels. */
     public static final int Y0 = 2;
+    /** Chrome thickness drawn around a panel's slots, on every edge. */
+    public static final int BORDER = 4;
 
     private BackpackLayout() {}
 
