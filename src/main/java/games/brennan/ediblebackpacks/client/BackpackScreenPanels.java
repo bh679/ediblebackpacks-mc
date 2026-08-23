@@ -33,7 +33,6 @@ public final class BackpackScreenPanels {
     /** Bevel shadow — the sides facing away from the light: bottom + right. */
     private static final int SHADE = 0xFF555555;
     private static final int SLOT_BG = 0xFF8B8B8B;
-    private static final int BORDER = 4;
     /**
      * Staircase depth of the outer border's corner cut, in pixels — matches the
      * vanilla inventory texture, whose outermost corner is a 3-pixel triangle
@@ -119,10 +118,10 @@ public final class BackpackScreenPanels {
                                boolean innerTop, boolean innerBottom, boolean outerTop, boolean outerBottom) {
         int xa = guiLeft + BackpackLayout.slotX(base + col0 * BackpackLayout.ROWS);
         int xb = guiLeft + BackpackLayout.slotX(base + (col0 + cols - 1) * BackpackLayout.ROWS);
-        int x0 = Math.min(xa, xb) - BORDER;
-        int x1 = Math.max(xa, xb) + BackpackLayout.SLOT + BORDER;
-        int y0 = guiTop + BackpackLayout.Y0 - BORDER;
-        int y1 = guiTop + BackpackLayout.Y0 + rows * BackpackLayout.SLOT + BORDER;
+        int x0 = Math.min(xa, xb) - BackpackLayout.BORDER;
+        int x1 = Math.max(xa, xb) + BackpackLayout.SLOT + BackpackLayout.BORDER;
+        int y0 = guiTop + BackpackLayout.Y0 - BackpackLayout.BORDER;
+        int y1 = guiTop + BackpackLayout.Y0 + rows * BackpackLayout.SLOT + BackpackLayout.BORDER;
         // The left panel grows leftward, so its inner edge is on the right.
         return right
             ? new Block(x0, y0, x1, y1, innerTop, outerTop, innerBottom, outerBottom)
