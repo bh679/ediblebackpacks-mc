@@ -21,6 +21,11 @@ cap still does something instead of being stranded.
   `InventoryMenu` on BOTH sides. `BackpackSlot.mayPlace/mayPickup` are the
   server-authoritative lock; `isActive` is display-only (also hides while the recipe
   book is open via `client/ClientPanelState`).
+- `menu/BackpackQuickMove` — shift-click routing (called from `InventoryMenuMixin`'s
+  `quickMoveStack` HEAD inject): the panels act like an always-open container —
+  inventory/hotbar → backpack (armour/offhand auto-equip still wins; falls back to
+  vanilla's hotbar↔inventory shuffle when nothing fits), backpack → inventory, and
+  crafting/armour/offhand slots overflow into the backpack when the inventory is full.
 - `client/BackpackScreenPanels` — draws panel chrome on `ContainerScreenEvent.Render.Background`;
   vanilla renders the slot items itself.
 - `network/SlotCountPayload` — server→client unlocked-count sync (attachments don't
