@@ -3,12 +3,15 @@
   "category": "misc",
   "pattern": [
     "BBB",
-    "BBB",
+    "BGB",
     "BBB"
   ],
   "key": {
     "B": {
       "item": "ediblebackpacks:edible_backpack"
+    },
+    "G": {
+      "item": "minecraft:gold_block"
     }
   },
   "result": {
