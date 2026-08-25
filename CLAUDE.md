@@ -22,6 +22,15 @@ cap still does something instead of being stranded.
   `InventoryMenu` on BOTH sides. `BackpackSlot.mayPlace/mayPickup` are the
   server-authoritative lock; `isActive` is display-only (also hides while the recipe
   book is open via `client/ClientPanelState`).
+  **Never capture the attachment or its handler in the menu/slots.** The menu is
+  built in the `Player` constructor, and NeoForge replaces the whole `BackpackData`
+  object afterwards — on login (`deserializeAttachments` → `map.put(type, read(...))`)
+  and on respawn (`copyOnDeath` → `copyAttachments` → `map.put(type, copy)`). A
+  captured handler is orphaned from the first relog on: slots still unlock correctly
+  (the count is read live) but read/write a discarded `ItemStackHandler`, so anything
+  stored there is voided at the next save. `BackpackSlot.getItemHandler()` re-resolves
+  on every access; `mayPlace`/`getMaxStackSize` are re-implemented because
+  `SlotItemHandler` reads its captured field directly in exactly those three.
 - `menu/BackpackQuickMove` — shift-click routing (called from `InventoryMenuMixin`'s
   `quickMoveStack` HEAD inject): the panels act like an always-open container —
   inventory/hotbar → backpack (armour/offhand auto-equip still wins; falls back to

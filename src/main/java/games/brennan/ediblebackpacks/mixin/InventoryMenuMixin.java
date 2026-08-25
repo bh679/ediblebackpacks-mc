@@ -3,8 +3,6 @@ package games.brennan.ediblebackpacks.mixin;
 import games.brennan.ediblebackpacks.menu.BackpackLayout;
 import games.brennan.ediblebackpacks.menu.BackpackQuickMove;
 import games.brennan.ediblebackpacks.menu.BackpackSlot;
-import games.brennan.ediblebackpacks.registry.ModAttachments;
-import games.brennan.ediblebackpacks.storage.BackpackData;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -30,10 +28,12 @@ public abstract class InventoryMenuMixin {
     @Inject(method = "<init>(Lnet/minecraft/world/entity/player/Inventory;ZLnet/minecraft/world/entity/player/Player;)V",
             at = @At("TAIL"))
     private void ediblebackpacks$addBackpackSlots(Inventory inventory, boolean active, Player owner, CallbackInfo ci) {
-        BackpackData data = owner.getData(ModAttachments.BACKPACK);
         AbstractContainerMenuAccessor self = (AbstractContainerMenuAccessor) this;
         for (int i = 0; i < BackpackLayout.MAX_SLOTS; i++) {
-            self.ediblebackpacks$invokeAddSlot(new BackpackSlot(data.items(), owner, i));
+            // The slot resolves the player's attachment on every access — see
+            // BackpackSlot: NeoForge swaps the attachment object out on login
+            // and respawn, both of which happen after this constructor runs.
+            self.ediblebackpacks$invokeAddSlot(new BackpackSlot(owner, i));
         }
     }
 
