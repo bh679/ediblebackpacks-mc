@@ -31,6 +31,11 @@ cap still does something instead of being stranded.
   stored there is voided at the next save. `BackpackSlot.getItemHandler()` re-resolves
   on every access; `mayPlace`/`getMaxStackSize` are re-implemented because
   `SlotItemHandler` reads its captured field directly in exactly those three.
+  Each menu also hands its panels their own empty `SimpleContainer` marker via
+  `mixin/SlotAccessor`: NeoForge gives every `SlotItemHandler` one shared
+  `emptyInventory`, and vanilla's `transferState` (on every container close)
+  matches slots by `(container, containerSlot)`, so without the marker another
+  mod's item-handler slots overwrite this panel's sync bookkeeping.
 - `menu/BackpackQuickMove` — shift-click routing (called from `InventoryMenuMixin`'s
   `quickMoveStack` HEAD inject): the panels act like an always-open container —
   inventory/hotbar → backpack (armour/offhand auto-equip still wins; falls back to

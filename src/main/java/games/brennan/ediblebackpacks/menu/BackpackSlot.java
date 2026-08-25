@@ -1,7 +1,9 @@
 package games.brennan.ediblebackpacks.menu;
 
 import games.brennan.ediblebackpacks.client.ClientPanelState;
+import games.brennan.ediblebackpacks.mixin.SlotAccessor;
 import games.brennan.ediblebackpacks.registry.ModAttachments;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;
@@ -19,6 +21,13 @@ import net.neoforged.neoforge.items.SlotItemHandler;
  * {@code Player} constructor — a captured handler would be orphaned from the
  * first relog on, silently voiding anything placed in the panels.</p>
  *
+ * <p>The inherited {@code Container} identity is replaced with a marker owned
+ * by this menu. NeoForge gives every {@code SlotItemHandler} the same shared
+ * {@code emptyInventory}, and vanilla keys slots on {@code (container,
+ * containerSlot)} when a player closes a container, which would let another
+ * mod's item-handler slots overwrite this panel's sync bookkeeping — see
+ * {@link SlotAccessor}.</p>
+ *
  * <p>{@link #isActive()} additionally hides the panels client-side while the
  * crafting recipe book is open (the book overlaps the left panel). The
  * server never consults {@code isActive} for click validation, so
@@ -29,13 +38,16 @@ public final class BackpackSlot extends SlotItemHandler {
     private final Player owner;
     private final int backpackIndex;
 
-    public BackpackSlot(Player owner, int backpackIndex) {
+    public BackpackSlot(Player owner, int backpackIndex, Container marker) {
         // The super handler is only a seed; getItemHandler() below is what
         // every read/write actually goes through.
         super(owner.getData(ModAttachments.BACKPACK).items(), backpackIndex,
             BackpackLayout.slotX(backpackIndex), BackpackLayout.slotY(backpackIndex));
         this.owner = owner;
         this.backpackIndex = backpackIndex;
+        // Same kind of object SlotItemHandler would have left here (an empty
+        // SimpleContainer), just not one shared with every other mod's slots.
+        ((SlotAccessor) (Object) this).ediblebackpacks$setContainer(marker);
     }
 
     /** Always the player's current attachment, never the one captured at menu build time. */
