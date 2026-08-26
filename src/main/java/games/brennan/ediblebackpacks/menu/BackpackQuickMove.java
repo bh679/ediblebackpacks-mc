@@ -30,8 +30,21 @@ public final class BackpackQuickMove {
     public static final int INV_START = 9;
     /** Offhand slot of {@code InventoryMenu}; 9..35 main, 36..44 hotbar. */
     public static final int OFFHAND = 45;
-    /** Exclusive end of vanilla's usual quick-move destination range. */
-    public static final int INV_END = OFFHAND + 1;
+    /**
+     * Exclusive end of vanilla's usual quick-move destination range: 9..44, stopping BEFORE
+     * the offhand.
+     *
+     * <p>It must never include {@link #OFFHAND}. A quick-move <em>out of</em> the offhand
+     * passes this range to {@code moveItemStackTo}, whose merge pass would then reach slot 45
+     * and find the source stack itself — computing {@code count + count} on a single
+     * {@code ItemStack} instance, then {@code setCount(0)} followed by {@code setCount(2n)}.
+     * That doubles the stack, and the following empty-slot pass splits the doubled stack out
+     * into the inventory: a straight duplication bug.</p>
+     *
+     * <p>Filling an <em>empty</em> offhand is unaffected — {@link #equipPreferred} still hands
+     * those clicks back to vanilla, which equips them.</p>
+     */
+    public static final int INV_END = OFFHAND;
 
     private BackpackQuickMove() {}
 
