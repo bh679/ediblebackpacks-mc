@@ -70,6 +70,8 @@ dependencies {
     testImplementation platform('org.junit:junit-bom:5.10.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // TEMPORARY (diagnosis only): real MinecraftServer for headless menu tests.
+    testImplementation "net.neoforged:testframework:${neo_version}"
 }
 
 tasks.named('test', Test).configure {

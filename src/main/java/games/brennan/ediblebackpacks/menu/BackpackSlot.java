@@ -1,6 +1,6 @@
 package games.brennan.ediblebackpacks.menu;
 
-import games.brennan.ediblebackpacks.client.ClientPanelState;
+import games.brennan.ediblebackpacks.client.BackpackPanelLayout;
 import games.brennan.ediblebackpacks.mixin.SlotAccessor;
 import games.brennan.ediblebackpacks.registry.ModAttachments;
 import net.minecraft.world.Container;
@@ -28,10 +28,11 @@ import net.neoforged.neoforge.items.SlotItemHandler;
  * mod's item-handler slots overwrite this panel's sync bookkeeping — see
  * {@link SlotAccessor}.</p>
  *
- * <p>{@link #isActive()} additionally hides the panels client-side while the
- * crafting recipe book is open (the book overlaps the left panel). The
- * server never consults {@code isActive} for click validation, so
- * {@link #mayPlace}/{@link #mayPickup} carry the authoritative lock check.</p>
+ * <p>{@link #isActive()} is display-only — the server never consults it for click
+ * validation, so {@link #mayPlace}/{@link #mayPickup} carry the authoritative lock
+ * check. That asymmetry is why the recipe book makes the panels MOVE rather than
+ * switch off: an inactive slot still accepts items, so hiding one hides the items
+ * quick-move puts in it. See {@code client/BackpackPanelLayout}.</p>
  */
 public final class BackpackSlot extends SlotItemHandler {
 
@@ -56,6 +57,11 @@ public final class BackpackSlot extends SlotItemHandler {
         return owner.getData(ModAttachments.BACKPACK).items();
     }
 
+    /** This slot's index into the backpack, which is also its place in the fill order. */
+    public int backpackIndex() {
+        return backpackIndex;
+    }
+
     private boolean unlockedNow() {
         return backpackIndex < owner.getData(ModAttachments.BACKPACK).unlocked();
     }
@@ -63,9 +69,12 @@ public final class BackpackSlot extends SlotItemHandler {
     @Override
     public boolean isActive() {
         if (!unlockedNow()) return false;
-        // Client-only: hide while the recipe book is open. On the logical
-        // server isClientSide is false, so the client class never loads there.
-        if (owner.level().isClientSide && ClientPanelState.recipeBookOpen()) return false;
+        // Client-only: the panels normally MOVE out of the recipe book's way rather than
+        // switch off — a slot that is inactive but still accepts items swallows quick-moved
+        // stacks in plain sight of nobody. Only a screen too narrow for the moved layout
+        // hides them. On the logical server isClientSide is false, so the client class
+        // never loads there.
+        if (owner.level().isClientSide && BackpackPanelLayout.hidden()) return false;
         return true;
     }
 

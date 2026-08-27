@@ -10,6 +10,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ContainerScreenEvent;
+import net.neoforged.neoforge.client.event.ScreenEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,8 +19,12 @@ import java.util.List;
  * Draws the two backpack panel backgrounds behind the appended slots on the
  * survival {@link InventoryScreen}. Slot items/highlights are rendered by the
  * vanilla screen loop (the slots live in the menu); only the chrome is drawn
- * here. Hidden entirely while the recipe book is open — the slots themselves
- * also deactivate (see {@code BackpackSlot#isActive()}).
+ * here.
+ *
+ * <p>Also the place the panels get positioned for the frame: {@link BackpackPanelLayout}
+ * decides whether the recipe book is forcing them right of the GUI, and the chrome below
+ * is drawn in whatever mode it picked, from the same {@link BackpackLayout} math the slots
+ * use — so the two cannot drift apart.</p>
  */
 @EventBusSubscriber(modid = EdibleBackpacks.MOD_ID, value = Dist.CLIENT)
 public final class BackpackScreenPanels {
@@ -45,27 +50,41 @@ public final class BackpackScreenPanels {
     @SubscribeEvent
     public static void onRenderBackground(ContainerScreenEvent.Render.Background event) {
         if (!(event.getContainerScreen() instanceof InventoryScreen screen)) return;
-        if (ClientPanelState.recipeBookOpen()) return;
 
         Player player = screen.getMinecraft().player;
         if (player == null) return;
         int unlocked = player.getData(ModAttachments.BACKPACK).unlocked();
-        if (unlocked <= 0) return;
+
+        // Place the slots before anything reads their position — this runs ahead of the
+        // frame's input handling, so hit-testing matches what is drawn below.
+        BackpackPanelLayout.Mode mode = BackpackPanelLayout.update(screen, unlocked);
+        if (unlocked <= 0 || mode == BackpackPanelLayout.Mode.HIDDEN) return;
 
         GuiGraphics g = event.getGuiGraphics();
         int left = screen.getGuiLeft();
         int top = screen.getGuiTop();
+        boolean bookMode = mode == BackpackPanelLayout.Mode.BOOK;
 
-        drawPanel(g, left, top, unlocked, false);
-        drawPanel(g, left, top, unlocked, true);
+        drawPanel(g, left, top, unlocked, false, bookMode);
+        drawPanel(g, left, top, unlocked, true, bookMode);
     }
 
-    private static void drawPanel(GuiGraphics g, int guiLeft, int guiTop, int unlocked, boolean right) {
+    /** Keeps the slot positions right for the first frame, before any render runs. */
+    @SubscribeEvent
+    public static void onScreenInit(ScreenEvent.Init.Post event) {
+        if (!(event.getScreen() instanceof InventoryScreen screen)) return;
+        Player player = screen.getMinecraft().player;
+        if (player == null) return;
+        BackpackPanelLayout.update(screen, player.getData(ModAttachments.BACKPACK).unlocked());
+    }
+
+    private static void drawPanel(GuiGraphics g, int guiLeft, int guiTop, int unlocked,
+                                  boolean right, boolean bookMode) {
         int slots = BackpackLayout.unlockedOnPanel(unlocked, right);
         if (slots <= 0) return;
 
         int base = right ? BackpackLayout.PANEL_SLOTS : 0;
-        List<Block> blocks = silhouette(guiLeft, guiTop, base, slots, right);
+        List<Block> blocks = silhouette(guiLeft, guiTop, base, slots, right, bookMode);
 
         // One pass per chrome layer, not per block: a block's FACE has to paint
         // over its neighbour's inner border, which has not been drawn yet if the
@@ -78,7 +97,7 @@ public final class BackpackScreenPanels {
         // Slot insets — recessed, so their bevel is the panel's inverted:
         // shadow on the top-left, highlight on the bottom-right.
         for (int i = 0; i < slots; i++) {
-            int sx = guiLeft + BackpackLayout.slotX(base + i);
+            int sx = guiLeft + BackpackLayout.slotX(base + i, bookMode);
             int sy = guiTop + BackpackLayout.slotY(base + i);
             g.fill(sx - 1, sy - 1, sx + 17, sy + 17, SHADE);
             g.fill(sx, sy, sx + 18, sy + 18, LIGHT);
@@ -96,34 +115,37 @@ public final class BackpackScreenPanels {
      * column outside it. Only corners on the silhouette's outside are rounded —
      * where the two blocks meet, the edges are interior and stay square.
      */
-    private static List<Block> silhouette(int guiLeft, int guiTop, int base, int slots, boolean right) {
+    private static List<Block> silhouette(int guiLeft, int guiTop, int base, int slots, boolean right,
+                                          boolean bookMode) {
         int fullCols = slots / BackpackLayout.ROWS;
         int rem = slots % BackpackLayout.ROWS;
         List<Block> blocks = new ArrayList<>(2);
         if (fullCols > 0) {
             // The short column, if any, covers this block's outward TOP corner but
             // never its bottom — that one stays exposed at the step.
-            blocks.add(block(guiLeft, guiTop, base, 0, fullCols, BackpackLayout.ROWS, right,
+            blocks.add(block(guiLeft, guiTop, base, 0, fullCols, BackpackLayout.ROWS, right, bookMode,
                              true, true, rem == 0, true));
         }
         if (rem > 0) {
-            blocks.add(block(guiLeft, guiTop, base, fullCols, 1, rem, right,
+            blocks.add(block(guiLeft, guiTop, base, fullCols, 1, rem, right, bookMode,
                              fullCols == 0, fullCols == 0, true, true));
         }
         return blocks;
     }
 
     /** Chrome rect around {@code cols} columns of {@code rows} slots, starting at fill-column {@code col0}. */
-    private static Block block(int guiLeft, int guiTop, int base, int col0, int cols, int rows, boolean right,
+    private static Block block(int guiLeft, int guiTop, int base, int col0, int cols, int rows,
+                               boolean right, boolean bookMode,
                                boolean innerTop, boolean innerBottom, boolean outerTop, boolean outerBottom) {
-        int xa = guiLeft + BackpackLayout.slotX(base + col0 * BackpackLayout.ROWS);
-        int xb = guiLeft + BackpackLayout.slotX(base + (col0 + cols - 1) * BackpackLayout.ROWS);
+        int xa = guiLeft + BackpackLayout.slotX(base + col0 * BackpackLayout.ROWS, bookMode);
+        int xb = guiLeft + BackpackLayout.slotX(base + (col0 + cols - 1) * BackpackLayout.ROWS, bookMode);
         int x0 = Math.min(xa, xb) - BackpackLayout.BORDER;
         int x1 = Math.max(xa, xb) + BackpackLayout.SLOT + BackpackLayout.BORDER;
         int y0 = guiTop + BackpackLayout.Y0 - BackpackLayout.BORDER;
         int y1 = guiTop + BackpackLayout.Y0 + rows * BackpackLayout.SLOT + BackpackLayout.BORDER;
-        // The left panel grows leftward, so its inner edge is on the right.
-        return right
+        // The left panel grows leftward, so its inner edge is on the right — except in book
+        // mode, where both panels sit right of the GUI and grow the same way.
+        return right || bookMode
             ? new Block(x0, y0, x1, y1, innerTop, outerTop, innerBottom, outerBottom)
             : new Block(x0, y0, x1, y1, outerTop, innerTop, outerBottom, innerBottom);
     }

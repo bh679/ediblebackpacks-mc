@@ -24,4 +24,14 @@ public interface SlotAccessor {
     @Mutable
     @Accessor("container")
     void ediblebackpacks$setContainer(Container container);
+
+    /**
+     * Moves a slot horizontally. {@code Slot#x} is final in vanilla, but it is read only by
+     * the client — rendering and {@code AbstractContainerScreen#findSlot} hit-testing; the
+     * server never looks at it — so re-placing the panels is client-local state. See
+     * {@code client/BackpackPanelLayout}.
+     */
+    @Mutable
+    @Accessor("x")
+    void ediblebackpacks$setX(int x);
 }

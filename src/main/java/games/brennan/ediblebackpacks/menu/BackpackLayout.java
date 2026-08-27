@@ -23,10 +23,12 @@ public final class BackpackLayout {
 
     /** Gap between a panel's inner edge and the GUI edge. */
     public static final int GAP = 8;
+    /** Width of the vanilla survival inventory GUI. */
+    public static final int GUI_WIDTH = 176;
     /** Left panel's innermost (closest) column x: right edge 8px left of the GUI. */
-    public static final int LEFT_INNER_X = -(GAP + SLOT);   // -26
-    /** Right panel's innermost (closest) column x: 8px right of the 176px GUI edge. */
-    public static final int RIGHT_INNER_X = 176 + GAP;      // 184
+    public static final int LEFT_INNER_X = -(GAP + SLOT);        // -26
+    /** Right panel's innermost (closest) column x: 8px right of the GUI edge. */
+    public static final int RIGHT_INNER_X = GUI_WIDTH + GAP;     // 184
     /** Top of both panels. */
     public static final int Y0 = 2;
     /** Chrome thickness drawn around a panel's slots, on every edge. */
@@ -49,12 +51,46 @@ public final class BackpackLayout {
         return (index % PANEL_SLOTS) % ROWS;
     }
 
-    /** Slot x relative to the screen's leftPos. */
+    /** Slot x relative to the screen's leftPos, in the normal (recipe book closed) layout. */
     public static int slotX(int index) {
+        return slotX(index, false);
+    }
+
+    /**
+     * Slot x relative to the screen's leftPos.
+     *
+     * <p>{@code bookMode} is the layout used while the crafting recipe book is open. The book
+     * covers the whole left panel, so BOTH panels move right of the GUI rather than being
+     * hidden — the left panel keeps the inner columns (fill order still runs closest-first,
+     * growing outward), the right panel takes the six beyond it. Hiding a slot that is still
+     * live is what let quick-moved items land where the player could not see them.</p>
+     */
+    public static int slotX(int index, boolean bookMode) {
         int col = columnOf(index);
+        if (bookMode) {
+            return RIGHT_INNER_X + (isRightPanel(index) ? COLS + col : col) * SLOT;
+        }
         return isRightPanel(index)
             ? RIGHT_INNER_X + col * SLOT     // right panel grows rightward
             : LEFT_INNER_X - col * SLOT;     // left panel grows leftward
+    }
+
+    /**
+     * Rightmost pixel the panel chrome reaches, relative to leftPos, for {@code unlocked}
+     * slots — what the client checks against the screen width before choosing book mode.
+     * Falls back to the GUI's own right edge when nothing sits on that side.
+     */
+    public static int rightExtent(int unlocked, boolean bookMode) {
+        int rightCols = columnsFor(unlockedOnPanel(unlocked, true));
+        int cols;
+        if (!bookMode) {
+            cols = rightCols;
+        } else if (rightCols > 0) {
+            cols = COLS + rightCols;         // left panel is full before the right one starts
+        } else {
+            cols = columnsFor(unlockedOnPanel(unlocked, false));
+        }
+        return cols == 0 ? GUI_WIDTH : RIGHT_INNER_X + cols * SLOT + BORDER;
     }
 
     /** Slot y relative to the screen's topPos. */
