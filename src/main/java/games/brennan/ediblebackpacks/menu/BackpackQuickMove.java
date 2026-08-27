@@ -18,7 +18,9 @@ import net.minecraft.world.item.ItemStack;
  *       hotbar↔inventory shuffle when nothing fits. Armour and offhand items
  *       still auto-equip first, exactly as they do without this mod;</li>
  *   <li>crafting result / crafting grid / armour / offhand → the player
- *       inventory as usual, overflowing into the backpack when it is full.</li>
+ *       inventory as usual, overflowing into the backpack when it is full.
+ *       The crafting result tries the offhand in between, so a bulk craft with
+ *       a full inventory still lands somewhere the player can see.</li>
  * </ul>
  *
  * <p>Runs on both sides; locked backpack slots are empty and refuse
@@ -77,6 +79,11 @@ public final class BackpackQuickMove {
             moved = mover.move(inSlot, INV_START, INV_END, false);
         } else if (index < INV_START || index == OFFHAND) {
             moved = mover.move(inSlot, INV_START, INV_END, index == 0);
+            // Crafting result only: the offhand is a last resort the player can always SEE,
+            // so it comes before the panels. Safe here where {@link #INV_END} is not — the
+            // duplication that range guards against needs the source slot to sit inside the
+            // destination, and the source here is slot 0.
+            if (index == 0 && !inSlot.isEmpty()) moved |= mover.move(inSlot, OFFHAND, OFFHAND + 1, false);
             if (!inSlot.isEmpty()) moved |= mover.move(inSlot, start, end, false);
         } else {
             if (equipPreferred(slots, player, original)) return null;

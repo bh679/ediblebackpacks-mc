@@ -20,8 +20,14 @@ cap still does something instead of being stranded.
   indices must stay stable for vanilla container sync).
 - `mixin/InventoryMenuMixin` — appends 108 `menu/BackpackSlot`s to the vanilla
   `InventoryMenu` on BOTH sides. `BackpackSlot.mayPlace/mayPickup` are the
-  server-authoritative lock; `isActive` is display-only (also hides while the recipe
-  book is open via `client/ClientPanelState`).
+  server-authoritative lock; `isActive` is display-only.
+  **Never leave a panel slot inactive while it can still accept items.** `moveItemStackTo`
+  consults `mayPlace`, never `isActive`, so a hidden-but-live slot silently swallows
+  quick-moved stacks — a shift-clicked crafting result leaves the grid and lands nowhere
+  the player can see. That is why the recipe book makes the panels MOVE
+  (`client/BackpackPanelLayout` + `BackpackLayout.slotX(index, bookMode)`: both panels go
+  right of the GUI, clear of the book) instead of switching off. Only a screen too narrow
+  for the moved layout still hides them.
   **Never capture the attachment or its handler in the menu/slots.** The menu is
   built in the `Player` constructor, and NeoForge replaces the whole `BackpackData`
   object afterwards — on login (`deserializeAttachments` → `map.put(type, read(...))`)
@@ -41,6 +47,10 @@ cap still does something instead of being stranded.
   inventory/hotbar → backpack (armour/offhand auto-equip still wins; falls back to
   vanilla's hotbar↔inventory shuffle when nothing fits), backpack → inventory, and
   crafting/armour/offhand slots overflow into the backpack when the inventory is full.
+  The crafting result tries the offhand between the two, so a bulk craft with a full
+  inventory still lands somewhere visible. That extra call is safe where `INV_END` is
+  not: the duplication `INV_END` guards against needs the source slot inside the
+  destination range, and the result slot is 0.
 - `client/BackpackScreenPanels` — draws panel chrome on `ContainerScreenEvent.Render.Background`;
   vanilla renders the slot items itself.
 - `network/SlotCountPayload` — server→client unlocked-count sync (attachments don't
@@ -59,5 +69,14 @@ MINOR-aligned (X.Y.0). Never `git tag` manually.
 
 ## Testing
 
-`./gradlew test` (pure-logic: policy + layout math). In-game verification happens in
-the Dungeon Train dev client where the mod is bundled.
+`./gradlew test` covers two layers:
+- pure logic (policy + layout math), no Minecraft on the classpath;
+- `InventoryMenuQuickMoveTest` — a **real** `InventoryMenu` with the mixin applied, driven
+  on an ephemeral server (`neoForge.unitTest` + NeoForge's `EphemeralTestServerProvider` +
+  a `FakePlayer`), so a shift-click there is the call the server really runs. Levels are
+  created reflectively: that server skips `loadLevel`, and the spawn search needs a ticking
+  chunk system, so the world data is switched to ADVENTURE to skip it.
+
+In-game verification still happens in the Dungeon Train dev client where the mod is
+bundled. For anything client-side (panel placement, hit-testing), a scripted `runClient`
+with a temporary `ClientTickEvent` driver reproduces a click end to end without a human.
