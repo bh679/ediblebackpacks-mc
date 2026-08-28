@@ -55,8 +55,8 @@ cap still does something instead of being stranded.
 - `client/BackpackScreenPanels` — draws panel chrome on `ContainerScreenEvent.Render.Background`;
   vanilla renders the slot items itself. Also owns `client/BackpackToggleButton`, added to the
   screen at `ScreenEvent.Init.Post` (NeoForge's `addListener` puts a widget in both `children`
-  and `renderables`) and re-positioned every frame beside the vanilla recipe-book button —
-  vanilla only moves its own when the book slides the GUI.
+  and `renderables`) and re-positioned every frame above the offhand slot — vanilla only moves
+  its own widgets when the recipe book slides the GUI.
 - Open/close toggle — `BackpackData.panelsOpen`, persisted and synced both ways by
   `network/PanelOpenPayload` (one id, `playBidirectional` + `DirectionalPayloadHandler`;
   registering the same payload twice is a hard error). Closed is a real lock, not a hide:

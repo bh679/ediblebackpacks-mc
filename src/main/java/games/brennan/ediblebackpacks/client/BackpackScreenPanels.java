@@ -100,7 +100,7 @@ public final class BackpackScreenPanels {
 
     /**
      * Follows the GUI: toggling the recipe book moves {@code leftPos}, and vanilla only
-     * repositions its own button. Hidden entirely until the player has eaten a backpack —
+     * repositions its own widgets. Hidden entirely until the player has eaten a backpack —
      * there is nothing to open yet.
      */
     private static void placeButton(InventoryScreen screen, int unlocked) {
