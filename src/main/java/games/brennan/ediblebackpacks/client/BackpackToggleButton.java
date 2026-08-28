@@ -10,7 +10,7 @@ import net.minecraft.world.item.ItemStack;
 /**
  * The open/close button on the survival inventory screen — where it sits, and whether it is
  * there at all, is the player's choice ({@code config/EBClientConfig}; the hotkey works
- * either way). Vanilla recipe-button footprint of 20×18, vanilla button chrome, with an
+ * either way). Slightly under vanilla's 20×18 recipe-button footprint at 18×16, vanilla button chrome, with an
  * {@code edible_backpack} item drawn on it as the glyph — no new texture asset, which also
  * keeps the icon in step if the item art ever changes.
  *
@@ -43,7 +43,7 @@ public final class BackpackToggleButton extends Button {
     @Override
     protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.renderWidget(graphics, mouseX, mouseY, partialTick);
-        // Centred in the 20×18 face: the item renders 16×16.
-        graphics.renderItem(icon, getX() + 2, getY() + 1);
+        // Centred in the 18×16 face: the item renders 16×16.
+        graphics.renderItem(icon, getX() + 1, getY());
     }
 }

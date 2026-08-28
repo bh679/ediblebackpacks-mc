@@ -13,16 +13,22 @@ import games.brennan.ediblebackpacks.config.ButtonAnchor;
  */
 public final class ButtonPlacement {
 
-    public static final int WIDTH = 20;
-    public static final int HEIGHT = 18;
+    /**
+     * One pixel of button chrome around the 16x16 item glyph. Deliberately smaller than
+     * vanilla's own 20x18 recipe-book button: this one sits over the inventory rather than
+     * beside it, and at the vanilla size it read as a third piece of GUI furniture rather
+     * than a small affordance.
+     */
+    public static final int WIDTH = 18;
+    public static final int HEIGHT = 16;
 
     /**
-     * Above the offhand slot. A 20px button centred on the slot would start at 75, one pixel
-     * into the portrait viewport, so it starts at 76; ending at y 60 leaves the slot's chrome
+     * Above the offhand slot. Centred on the slot (77..93) an 18px button starts at 76, which
+     * also clears the portrait viewport ending at 75; ending at y 60 leaves the slot's chrome
      * (from 61) untouched.
      */
     public static final int OFFHAND_X = 76;
-    public static final int OFFHAND_Y = 42;
+    public static final int OFFHAND_Y = 44;
 
     /** Two pixels right of the recipe-book button, level with it. */
     public static final int RECIPE_BOOK_X = 126;
