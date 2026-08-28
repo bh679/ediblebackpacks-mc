@@ -1,5 +1,6 @@
 package games.brennan.ediblebackpacks;
 
+import games.brennan.ediblebackpacks.config.EBClientConfig;
 import games.brennan.ediblebackpacks.config.EBConfig;
 import games.brennan.ediblebackpacks.registry.ModAttachments;
 import games.brennan.ediblebackpacks.registry.ModItems;
@@ -28,5 +29,7 @@ public final class EdibleBackpacks {
 
         // SERVER config: per-world, auto-synced to clients on login.
         modContainer.registerConfig(ModConfig.Type.SERVER, EBConfig.SPEC);
+        // CLIENT config: the toggle button's own appearance — never read on a server.
+        modContainer.registerConfig(ModConfig.Type.CLIENT, EBClientConfig.SPEC);
     }
 }

@@ -10,6 +10,10 @@ Two items, both `EdibleBackpackItem` with a different `slotsGranted`: `edible_ba
 and `upgraded_backpack` (9). Both non-stackable; 8 singles ringing a `minecraft:gold_block` in the centre craft into one
 upgraded (shaped, so the block can only sit in the middle; one-way only — an 8-count result is
 invalid against a max stack size of 1, which is exactly what the reverse recipe would need).
+The recipe reaches the recipe book the vanilla way, through a recipe advancement
+(`data/ediblebackpacks/advancement/recipes/misc/upgraded_backpack.json`, folder singular since
+1.21): holding an `edible_backpack` unlocks it. Being 3×3 it shows in a crafting table's book,
+not the 2×2 inventory one.
 Grants top up to the cap (`BackpackPolicy.effectiveGrant`) so an upgraded backpack near the
 cap still does something instead of being stranded.
 
@@ -55,8 +59,11 @@ cap still does something instead of being stranded.
 - `client/BackpackScreenPanels` — draws panel chrome on `ContainerScreenEvent.Render.Background`;
   vanilla renders the slot items itself. Also owns `client/BackpackToggleButton`, added to the
   screen at `ScreenEvent.Init.Post` (NeoForge's `addListener` puts a widget in both `children`
-  and `renderables`) and re-positioned every frame above the offhand slot — vanilla only moves
-  its own widgets when the recipe book slides the GUI.
+  and `renderables`) and re-positioned every frame — vanilla only moves its own widgets when
+  the recipe book slides the GUI. The button is optional and movable: `config/EBClientConfig`
+  (CLIENT toml) carries on/off plus a `ButtonAnchor` of OFFHAND / RECIPE_BOOK / CUSTOM x,y,
+  resolved by the pure, unit-tested `client/ButtonPlacement`. Switching it off is safe only
+  because the hotkey exists.
 - Open/close toggle — `BackpackData.panelsOpen`, persisted and synced both ways by
   `network/PanelOpenPayload` (one id, `playBidirectional` + `DirectionalPayloadHandler`;
   registering the same payload twice is a hard error). Closed is a real lock, not a hide:

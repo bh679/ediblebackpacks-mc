@@ -1,6 +1,7 @@
 package games.brennan.ediblebackpacks.client;
 
 import games.brennan.ediblebackpacks.EdibleBackpacks;
+import games.brennan.ediblebackpacks.config.EBClientConfig;
 import games.brennan.ediblebackpacks.menu.BackpackLayout;
 import games.brennan.ediblebackpacks.registry.ModAttachments;
 import net.minecraft.client.gui.GuiGraphics;
@@ -89,7 +90,8 @@ public final class BackpackScreenPanels {
         Player player = screen.getMinecraft().player;
         if (player == null) return;
         // Spectators get no crafting GUI at all — vanilla skips its own recipe button there.
-        if (!player.isSpectator()) {
+        // Turning the button off leaves the hotkey as the only way in, which is the point.
+        if (!player.isSpectator() && EBClientConfig.buttonEnabled()) {
             button = new BackpackToggleButton();
             event.addListener(button);
         }
@@ -100,13 +102,15 @@ public final class BackpackScreenPanels {
 
     /**
      * Follows the GUI: toggling the recipe book moves {@code leftPos}, and vanilla only
-     * repositions its own widgets. Hidden entirely until the player has eaten a backpack —
+     * repositions its own widgets. The anchor is re-read every frame so a config edit lands
+     * without reopening the screen. Hidden entirely until the player has eaten a backpack —
      * there is nothing to open yet.
      */
     private static void placeButton(InventoryScreen screen, int unlocked) {
         if (button == null) return;
-        button.setPosition(screen.getGuiLeft() + BackpackToggleButton.X_OFFSET,
-                           screen.getGuiTop() + BackpackToggleButton.Y_OFFSET);
+        ButtonPlacement.Pos pos = ButtonPlacement.resolve(
+            EBClientConfig.buttonAnchor(), EBClientConfig.buttonX(), EBClientConfig.buttonY());
+        button.setPosition(screen.getGuiLeft() + pos.x(), screen.getGuiTop() + pos.y());
         button.visible = unlocked > 0;
         button.active = unlocked > 0;
         button.refreshTooltip();

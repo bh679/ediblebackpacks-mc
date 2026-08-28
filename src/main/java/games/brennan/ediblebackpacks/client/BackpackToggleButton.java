@@ -8,8 +8,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * The open/close button on the survival inventory screen, sitting directly above the offhand
- * (shield) slot. Vanilla recipe-button footprint of 20×18, vanilla button chrome, with an
+ * The open/close button on the survival inventory screen — where it sits, and whether it is
+ * there at all, is the player's choice ({@code config/EBClientConfig}; the hotkey works
+ * either way). Vanilla recipe-button footprint of 20×18, vanilla button chrome, with an
  * {@code edible_backpack} item drawn on it as the glyph — no new texture asset, which also
  * keeps the icon in step if the item art ever changes.
  *
@@ -17,30 +18,16 @@ import net.minecraft.world.item.ItemStack;
  * (see {@link ClientPanelState#toggle()}). Closing is a real lock, not a hide: the slots go
  * inert on both sides, so a shift-click while closed just does what vanilla would.</p>
  *
- * <p>Position is rewritten every frame from {@code BackpackScreenPanels} — opening the
- * recipe book slides the whole GUI right, and vanilla only moves its own widgets.</p>
+ * <p>Position is rewritten every frame from {@code BackpackScreenPanels} ({@link
+ * ButtonPlacement} does the anchor math) — opening the recipe book slides the whole GUI
+ * right, and vanilla only moves its own widgets.</p>
  */
 public final class BackpackToggleButton extends Button {
-
-    public static final int WIDTH = 20;
-    public static final int HEIGHT = 18;
-    /**
-     * Left edge relative to the screen's leftPos. The offhand slot is at x 77..93, so a 20px
-     * button centred over it would start at 75 — one pixel into the player-portrait viewport
-     * (26..75). Starting at 76 clears the viewport and still covers the slot; the crafting
-     * grid does not begin until 98.
-     */
-    public static final int X_OFFSET = 76;
-    /**
-     * Top edge relative to the screen's topPos: the offhand slot's chrome starts at y 61, so
-     * an 18px button ending at 60 sits right on top of it without touching.
-     */
-    public static final int Y_OFFSET = 42;
 
     private final ItemStack icon = new ItemStack(ModItems.EDIBLE_BACKPACK.get());
 
     public BackpackToggleButton() {
-        super(0, 0, WIDTH, HEIGHT, Component.empty(), b -> {
+        super(0, 0, ButtonPlacement.WIDTH, ButtonPlacement.HEIGHT, Component.empty(), b -> {
             ClientPanelState.toggle();
             ((BackpackToggleButton) b).refreshTooltip();
         }, DEFAULT_NARRATION);
