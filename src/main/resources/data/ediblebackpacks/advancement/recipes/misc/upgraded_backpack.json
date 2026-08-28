@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_edible_backpack": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "ediblebackpacks:edible_backpack"
+          }
+        ]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "ediblebackpacks:upgraded_backpack"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_edible_backpack",
+      "has_the_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ediblebackpacks:upgraded_backpack"
+    ]
+  }
+}

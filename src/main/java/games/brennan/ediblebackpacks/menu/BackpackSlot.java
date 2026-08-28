@@ -28,6 +28,11 @@ import net.neoforged.neoforge.items.SlotItemHandler;
  * mod's item-handler slots overwrite this panel's sync bookkeeping — see
  * {@link SlotAccessor}.</p>
  *
+ * <p>The player can also close the panels outright ({@code BackpackData#panelsOpen}, driven
+ * by the toggle button beside the recipe book). That is a real lock, not a hide: closed
+ * slots refuse {@link #mayPlace}/{@link #mayPickup} on both sides, so a shift-click simply
+ * falls back to vanilla's own destinations.</p>
+ *
  * <p>{@link #isActive()} is display-only — the server never consults it for click
  * validation, so {@link #mayPlace}/{@link #mayPickup} carry the authoritative lock
  * check. That asymmetry is why the recipe book makes the panels MOVE rather than
@@ -66,9 +71,18 @@ public final class BackpackSlot extends SlotItemHandler {
         return backpackIndex < owner.getData(ModAttachments.BACKPACK).unlocked();
     }
 
+    /**
+     * Unlocked AND the panels are open. Closing the panels shuts the backpack on both
+     * sides — an item route that stayed live while the panels were invisible is exactly
+     * the swallowed-stack bug the class javadoc warns about.
+     */
+    private boolean usableNow() {
+        return unlockedNow() && owner.getData(ModAttachments.BACKPACK).panelsOpen();
+    }
+
     @Override
     public boolean isActive() {
-        if (!unlockedNow()) return false;
+        if (!usableNow()) return false;
         // Client-only: the panels normally MOVE out of the recipe book's way rather than
         // switch off — a slot that is inactive but still accepts items swallows quick-moved
         // stacks in plain sight of nobody. Only a screen too narrow for the moved layout
@@ -84,12 +98,12 @@ public final class BackpackSlot extends SlotItemHandler {
 
     @Override
     public boolean mayPlace(ItemStack stack) {
-        return unlockedNow() && !stack.isEmpty() && getItemHandler().isItemValid(backpackIndex, stack);
+        return usableNow() && !stack.isEmpty() && getItemHandler().isItemValid(backpackIndex, stack);
     }
 
     @Override
     public boolean mayPickup(Player player) {
-        return unlockedNow() && super.mayPickup(player);
+        return usableNow() && super.mayPickup(player);
     }
 
     @Override

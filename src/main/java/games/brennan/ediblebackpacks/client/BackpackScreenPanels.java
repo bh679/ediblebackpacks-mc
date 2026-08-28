@@ -1,6 +1,7 @@
 package games.brennan.ediblebackpacks.client;
 
 import games.brennan.ediblebackpacks.EdibleBackpacks;
+import games.brennan.ediblebackpacks.config.EBClientConfig;
 import games.brennan.ediblebackpacks.menu.BackpackLayout;
 import games.brennan.ediblebackpacks.registry.ModAttachments;
 import net.minecraft.client.gui.GuiGraphics;
@@ -45,6 +46,13 @@ public final class BackpackScreenPanels {
      */
     private static final int CORNER_CUT = 2;
 
+    /**
+     * The toggle button of the screen currently open, so the render pass can keep it in
+     * step with the GUI (the recipe book slides everything right) and hide it for a player
+     * who has no backpack yet. Replaced on every screen init; cleared with the screen.
+     */
+    private static BackpackToggleButton button;
+
     private BackpackScreenPanels() {}
 
     @SubscribeEvent
@@ -54,11 +62,13 @@ public final class BackpackScreenPanels {
         Player player = screen.getMinecraft().player;
         if (player == null) return;
         int unlocked = player.getData(ModAttachments.BACKPACK).unlocked();
+        placeButton(screen, unlocked);
 
         // Place the slots before anything reads their position — this runs ahead of the
         // frame's input handling, so hit-testing matches what is drawn below.
         BackpackPanelLayout.Mode mode = BackpackPanelLayout.update(screen, unlocked);
-        if (unlocked <= 0 || mode == BackpackPanelLayout.Mode.HIDDEN) return;
+        // CLOSED and HIDDEN both mean "draw nothing" — see BackpackPanelLayout#hidden.
+        if (unlocked <= 0 || BackpackPanelLayout.hidden()) return;
 
         GuiGraphics g = event.getGuiGraphics();
         int left = screen.getGuiLeft();
@@ -69,13 +79,41 @@ public final class BackpackScreenPanels {
         drawPanel(g, left, top, unlocked, true, bookMode);
     }
 
-    /** Keeps the slot positions right for the first frame, before any render runs. */
+    /**
+     * Adds the toggle button and keeps the slot positions right for the first frame, before
+     * any render runs.
+     */
     @SubscribeEvent
     public static void onScreenInit(ScreenEvent.Init.Post event) {
+        button = null;
         if (!(event.getScreen() instanceof InventoryScreen screen)) return;
         Player player = screen.getMinecraft().player;
         if (player == null) return;
-        BackpackPanelLayout.update(screen, player.getData(ModAttachments.BACKPACK).unlocked());
+        // Spectators get no crafting GUI at all — vanilla skips its own recipe button there.
+        // Turning the button off leaves the hotkey as the only way in, which is the point.
+        if (!player.isSpectator() && EBClientConfig.buttonEnabled()) {
+            button = new BackpackToggleButton();
+            event.addListener(button);
+        }
+        int unlocked = player.getData(ModAttachments.BACKPACK).unlocked();
+        placeButton(screen, unlocked);
+        BackpackPanelLayout.update(screen, unlocked);
+    }
+
+    /**
+     * Follows the GUI: toggling the recipe book moves {@code leftPos}, and vanilla only
+     * repositions its own widgets. The anchor is re-read every frame so a config edit lands
+     * without reopening the screen. Hidden entirely until the player has eaten a backpack —
+     * there is nothing to open yet.
+     */
+    private static void placeButton(InventoryScreen screen, int unlocked) {
+        if (button == null) return;
+        ButtonPlacement.Pos pos = ButtonPlacement.resolve(
+            EBClientConfig.buttonAnchor(), EBClientConfig.buttonX(), EBClientConfig.buttonY());
+        button.setPosition(screen.getGuiLeft() + pos.x(), screen.getGuiTop() + pos.y());
+        button.visible = unlocked > 0;
+        button.active = unlocked > 0;
+        button.refreshTooltip();
     }
 
     private static void drawPanel(GuiGraphics g, int guiLeft, int guiTop, int unlocked,

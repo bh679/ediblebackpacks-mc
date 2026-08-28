@@ -19,4 +19,11 @@ final class ClientPayloadHandler {
             player.getData(ModAttachments.BACKPACK).setUnlocked(unlocked);
         }
     }
+
+    static void applyPanelOpen(boolean open) {
+        Player player = Minecraft.getInstance().player;
+        if (player != null) {
+            player.getData(ModAttachments.BACKPACK).setPanelsOpen(open);
+        }
+    }
 }

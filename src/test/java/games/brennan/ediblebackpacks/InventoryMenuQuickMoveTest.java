@@ -70,13 +70,18 @@ class InventoryMenuQuickMoveTest {
         return server.overworld();
     }
 
-    /** Fresh state: empty inventory, empty backpack, {@code unlocked} slots granted. */
+    /**
+     * Fresh state: empty inventory, empty backpack, panels open, {@code unlocked} slots
+     * granted. The FakePlayer is cached per level, so every field a test can change has to
+     * be reset here or it leaks into the next one.
+     */
     private static FakePlayer player(ServerLevel level, int unlocked) {
         FakePlayer player = FakePlayerFactory.getMinecraft(level);
         player.getInventory().clearContent();
         BackpackData data = player.getData(ModAttachments.BACKPACK);
         for (int i = 0; i < BackpackLayout.MAX_SLOTS; i++) data.items().setStackInSlot(i, ItemStack.EMPTY);
         data.setUnlocked(unlocked);
+        data.setPanelsOpen(true);
         for (int i = 0; i <= BackpackQuickMoveHelper.OFFHAND; i++) player.inventoryMenu.getSlot(i).set(ItemStack.EMPTY);
         return player;
     }
@@ -89,6 +94,30 @@ class InventoryMenuQuickMoveTest {
 
     private static void fillInventory(Inventory inv) {
         for (int i = 0; i < 36; i++) inv.setItem(i, new ItemStack(Items.COBBLESTONE, 64));
+    }
+
+    /** Hotbar only (inventory indices 0..8) — the destination a main-inventory click prefers. */
+    private static void fillHotbar(Inventory inv) {
+        for (int i = 0; i < 9; i++) inv.setItem(i, new ItemStack(Items.COBBLESTONE, 64));
+    }
+
+    private static int inHotbar(FakePlayer p, Item item) {
+        int n = 0;
+        for (int i = 0; i < 9; i++) {
+            ItemStack s = p.getInventory().getItem(i);
+            if (s.is(item)) n += s.getCount();
+        }
+        return n;
+    }
+
+    /** Main inventory rows only (inventory indices 9..35). */
+    private static int inMainInventory(FakePlayer p, Item item) {
+        int n = 0;
+        for (int i = 9; i < 36; i++) {
+            ItemStack s = p.getInventory().getItem(i);
+            if (s.is(item)) n += s.getCount();
+        }
+        return n;
     }
 
     private static void shiftClickResult(FakePlayer player) {
@@ -192,13 +221,74 @@ class InventoryMenuQuickMoveTest {
     }
 
     @Test
-    void shiftClickingTheInventoryFillsTheBackpack(MinecraftServer server) throws Exception {
+    void shiftClickingTheInventoryPrefersTheHotbar(MinecraftServer server) throws Exception {
         FakePlayer p = player(level(server), BackpackLayout.MAX_SLOTS);
+        p.inventoryMenu.getSlot(9).set(new ItemStack(Items.DIAMOND, 5));
+        p.inventoryMenu.clicked(9, 0, ClickType.QUICK_MOVE, p);
+
+        // The hotbar is where a shift-click has always put things; the backpack is extra
+        // space, not a queue-jumper.
+        assertEquals(5, inHotbar(p, Items.DIAMOND));
+        assertEquals(0, inBackpack(p, Items.DIAMOND));
+    }
+
+    @Test
+    void shiftClickingTheInventoryFillsTheBackpackOnceTheHotbarIsFull(MinecraftServer server) throws Exception {
+        FakePlayer p = player(level(server), BackpackLayout.MAX_SLOTS);
+        fillHotbar(p.getInventory());
         p.inventoryMenu.getSlot(9).set(new ItemStack(Items.DIAMOND, 5));
         p.inventoryMenu.clicked(9, 0, ClickType.QUICK_MOVE, p);
 
         assertEquals(5, inBackpack(p, Items.DIAMOND));
         assertEquals(0, inInventory(p, Items.DIAMOND));
+    }
+
+    @Test
+    void shiftClickingTheHotbarGoesToTheInventoryFirst(MinecraftServer server) throws Exception {
+        FakePlayer p = player(level(server), BackpackLayout.MAX_SLOTS);
+        // Menu slot 36 is hotbar index 0.
+        p.inventoryMenu.getSlot(36).set(new ItemStack(Items.DIAMOND, 5));
+        p.inventoryMenu.clicked(36, 0, ClickType.QUICK_MOVE, p);
+
+        assertEquals(5, inMainInventory(p, Items.DIAMOND));
+        assertEquals(0, inBackpack(p, Items.DIAMOND));
+    }
+
+    @Test
+    void closedPanelsRefuseQuickMoves(MinecraftServer server) throws Exception {
+        FakePlayer p = player(level(server), BackpackLayout.MAX_SLOTS);
+        p.getData(ModAttachments.BACKPACK).setPanelsOpen(false);
+        fillHotbar(p.getInventory());
+        p.inventoryMenu.getSlot(9).set(new ItemStack(Items.DIAMOND, 5));
+        p.inventoryMenu.clicked(9, 0, ClickType.QUICK_MOVE, p);
+
+        // Closed is a real lock, not a hide: nothing may land where the player cannot see it.
+        assertEquals(0, inBackpack(p, Items.DIAMOND));
+        assertEquals(5, p.inventoryMenu.getSlot(9).getItem().getCount(), "the stack stays put");
+    }
+
+    @Test
+    void closedPanelsTakeNoCraftingOverflow(MinecraftServer server) throws Exception {
+        FakePlayer p = player(level(server), BackpackLayout.MAX_SLOTS);
+        p.getData(ModAttachments.BACKPACK).setPanelsOpen(false);
+        fillInventory(p.getInventory());
+        p.inventoryMenu.getSlot(BackpackQuickMoveHelper.OFFHAND).set(new ItemStack(Items.SHIELD));
+        loadGrid(p.inventoryMenu);
+        shiftClickResult(p);
+
+        assertEquals(0, inBackpack(p, Items.STICK));
+        assertEquals(CRAFTS, p.inventoryMenu.getSlot(1).getItem().getCount(), "grid must not be consumed");
+    }
+
+    @Test
+    void closedPanelsLockTheSlots(MinecraftServer server) throws Exception {
+        FakePlayer p = player(level(server), BackpackLayout.MAX_SLOTS);
+        BackpackSlot slot = (BackpackSlot) p.inventoryMenu.getSlot(BackpackQuickMoveHelper.FIRST_BACKPACK);
+        assertTrue(slot.mayPlace(new ItemStack(Items.DIAMOND)));
+
+        p.getData(ModAttachments.BACKPACK).setPanelsOpen(false);
+        assertFalse(slot.mayPlace(new ItemStack(Items.DIAMOND)), "a closed backpack takes nothing");
+        assertFalse(slot.mayPickup(p), "and gives nothing back until it is reopened");
     }
 
     @Test

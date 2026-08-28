@@ -14,9 +14,10 @@ import net.minecraft.world.item.ItemStack;
  * <p>The backpack behaves like an open container that is always on screen:</p>
  * <ul>
  *   <li>backpack → main inventory, then hotbar (vanilla's own 9..45 destination);</li>
- *   <li>main inventory / hotbar → backpack, falling back to vanilla's
- *       hotbar↔inventory shuffle when nothing fits. Armour and offhand items
- *       still auto-equip first, exactly as they do without this mod;</li>
+ *   <li>main inventory / hotbar → vanilla's hotbar↔inventory shuffle FIRST, with
+ *       whatever does not fit there overflowing into the backpack. Armour and
+ *       offhand items still auto-equip ahead of both, exactly as they do without
+ *       this mod;</li>
  *   <li>crafting result / crafting grid / armour / offhand → the player
  *       inventory as usual, overflowing into the backpack when it is full.
  *       The crafting result tries the offhand in between, so a bulk craft with
@@ -30,6 +31,8 @@ public final class BackpackQuickMove {
 
     /** First main-inventory slot of {@code InventoryMenu} (0 result, 1..4 grid, 5..8 armour). */
     public static final int INV_START = 9;
+    /** First hotbar slot of {@code InventoryMenu}; the main inventory is 9..35. */
+    public static final int HOTBAR_START = 36;
     /** Offhand slot of {@code InventoryMenu}; 9..35 main, 36..44 hotbar. */
     public static final int OFFHAND = 45;
     /**
@@ -87,9 +90,15 @@ public final class BackpackQuickMove {
             if (!inSlot.isEmpty()) moved |= mover.move(inSlot, start, end, false);
         } else {
             if (equipPreferred(slots, player, original)) return null;
-            moved = mover.move(inSlot, start, end, false);
-            // Nothing fit in the backpack: let vanilla do its hotbar↔inventory move.
-            if (!moved) return null;
+            // Vanilla's own shuffle first — the hotbar (or the main inventory, coming back
+            // the other way) is where a shift-click has always put things, and the backpack
+            // is extra space, not a queue-jumper. Same ranges vanilla uses, so the offhand
+            // stays out of both (see INV_END).
+            moved = index < HOTBAR_START
+                ? mover.move(inSlot, HOTBAR_START, INV_END, false)
+                : mover.move(inSlot, INV_START, HOTBAR_START, false);
+            // Only the leftovers reach the panels.
+            if (!inSlot.isEmpty()) moved |= mover.move(inSlot, start, end, false);
         }
 
         if (!moved) return ItemStack.EMPTY;

@@ -10,6 +10,10 @@ Two items, both `EdibleBackpackItem` with a different `slotsGranted`: `edible_ba
 and `upgraded_backpack` (9). Both non-stackable; 8 singles ringing a `minecraft:gold_block` in the centre craft into one
 upgraded (shaped, so the block can only sit in the middle; one-way only — an 8-count result is
 invalid against a max stack size of 1, which is exactly what the reverse recipe would need).
+The recipe reaches the recipe book the vanilla way, through a recipe advancement
+(`data/ediblebackpacks/advancement/recipes/misc/upgraded_backpack.json`, folder singular since
+1.21): holding an `edible_backpack` unlocks it. Being 3×3 it shows in a crafting table's book,
+not the 2×2 inventory one.
 Grants top up to the cap (`BackpackPolicy.effectiveGrant`) so an upgraded backpack near the
 cap still does something instead of being stranded.
 
@@ -43,16 +47,32 @@ cap still does something instead of being stranded.
   matches slots by `(container, containerSlot)`, so without the marker another
   mod's item-handler slots overwrite this panel's sync bookkeeping.
 - `menu/BackpackQuickMove` — shift-click routing (called from `InventoryMenuMixin`'s
-  `quickMoveStack` HEAD inject): the panels act like an always-open container —
-  inventory/hotbar → backpack (armour/offhand auto-equip still wins; falls back to
-  vanilla's hotbar↔inventory shuffle when nothing fits), backpack → inventory, and
+  `quickMoveStack` HEAD inject): the panels act like extra space behind the vanilla
+  destinations — inventory/hotbar run vanilla's own hotbar↔inventory shuffle FIRST
+  (armour/offhand auto-equip still wins) and only the leftovers overflow into the
+  backpack, backpack → inventory, and
   crafting/armour/offhand slots overflow into the backpack when the inventory is full.
   The crafting result tries the offhand between the two, so a bulk craft with a full
   inventory still lands somewhere visible. That extra call is safe where `INV_END` is
   not: the duplication `INV_END` guards against needs the source slot inside the
   destination range, and the result slot is 0.
 - `client/BackpackScreenPanels` — draws panel chrome on `ContainerScreenEvent.Render.Background`;
-  vanilla renders the slot items itself.
+  vanilla renders the slot items itself. Also owns `client/BackpackToggleButton`, added to the
+  screen at `ScreenEvent.Init.Post` (NeoForge's `addListener` puts a widget in both `children`
+  and `renderables`) and re-positioned every frame — vanilla only moves its own widgets when
+  the recipe book slides the GUI. The button is optional and movable: `config/EBClientConfig`
+  (CLIENT toml) carries on/off plus a `ButtonAnchor` of OFFHAND / RECIPE_BOOK / CUSTOM x,y,
+  resolved by the pure, unit-tested `client/ButtonPlacement`. Switching it off is safe only
+  because the hotkey exists.
+- Open/close toggle — `BackpackData.panelsOpen`, persisted and synced both ways by
+  `network/PanelOpenPayload` (one id, `playBidirectional` + `DirectionalPayloadHandler`;
+  registering the same payload twice is a hard error). Closed is a real lock, not a hide:
+  `BackpackSlot.usableNow()` fails `mayPlace`/`mayPickup`/`isActive`, so quick-move just does
+  what vanilla would. That is the whole reason the flag has to reach the server —
+  `moveItemStackTo` never asks `isActive`. `BackpackPanelLayout.Mode.CLOSED` is the client
+  half, and `client/BackpackKeyBindings` the keyboard one — an unbound-by-default mapping,
+  handled both on client tick (in-world) and on `ScreenEvent.KeyPressed.Pre` (vanilla stops
+  ticking key mappings while a screen is open).
 - `network/SlotCountPayload` — server→client unlocked-count sync (attachments don't
   auto-sync). Sent on login/respawn/dimension-change/eat (`event/BackpackEvents`).
 - Death policy — `storage/BackpackPolicy.shouldResetOnDeath(configMode, hostDefault)`.

@@ -9,6 +9,10 @@ import net.minecraft.world.inventory.Slot;
 /**
  * Where the panels sit this frame, client-side.
  *
+ * <p>{@link Mode#CLOSED} is the player's own toggle (the button beside the recipe book).
+ * Unlike the cases below it is safe to simply not draw, because closing also locks the slots
+ * on the server — see {@code storage/BackpackData#panelsOpen}.</p>
+ *
  * <p>The recipe book covers the whole left panel. The panels used to simply switch off while
  * it was open — but {@code isActive} is display-only: vanilla's {@code moveItemStackTo} asks
  * {@code mayPlace}, never {@code isActive}, so the slots kept accepting items nobody could
@@ -31,6 +35,8 @@ public final class BackpackPanelLayout {
         NORMAL,
         /** Recipe book open: both panels right of the GUI, clear of the book. */
         BOOK,
+        /** Player closed the panels with the toggle button; the backpack is locked shut. */
+        CLOSED,
         /** Nowhere to put them — too narrow. The only case where the slots go inert. */
         HIDDEN
     }
@@ -44,9 +50,9 @@ public final class BackpackPanelLayout {
         return mode;
     }
 
-    /** True while the panels have nowhere to go and their slots must be inert. */
+    /** True while nothing is drawn: closed by the player, or nowhere to put them. */
     public static boolean hidden() {
-        return mode == Mode.HIDDEN;
+        return mode == Mode.CLOSED || mode == Mode.HIDDEN;
     }
 
     /**
@@ -68,6 +74,9 @@ public final class BackpackPanelLayout {
     }
 
     private static Mode resolve(AbstractContainerScreen<?> screen, int unlocked) {
+        // Closed wins over everything: the slots are locked server-side too, so there is
+        // nothing to place.
+        if (!ClientPanelState.panelsOpen()) return Mode.CLOSED;
         if (!ClientPanelState.recipeBookOpen()) return Mode.NORMAL;
         // The book has already pushed the GUI right; the panels get what is left over.
         return screen.getGuiLeft() + BackpackLayout.rightExtent(unlocked, true) <= screen.width
