@@ -63,7 +63,9 @@ cap still does something instead of being stranded.
   `BackpackSlot.usableNow()` fails `mayPlace`/`mayPickup`/`isActive`, so quick-move just does
   what vanilla would. That is the whole reason the flag has to reach the server —
   `moveItemStackTo` never asks `isActive`. `BackpackPanelLayout.Mode.CLOSED` is the client
-  half.
+  half, and `client/BackpackKeyBindings` the keyboard one — an unbound-by-default mapping,
+  handled both on client tick (in-world) and on `ScreenEvent.KeyPressed.Pre` (vanilla stops
+  ticking key mappings while a screen is open).
 - `network/SlotCountPayload` — server→client unlocked-count sync (attachments don't
   auto-sync). Sent on login/respawn/dimension-change/eat (`event/BackpackEvents`).
 - Death policy — `storage/BackpackPolicy.shouldResetOnDeath(configMode, hostDefault)`.
