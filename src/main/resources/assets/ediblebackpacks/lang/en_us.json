@@ -2,5 +2,7 @@
   "item.ediblebackpacks.edible_backpack": "Edible Backpack",
   "item.ediblebackpacks.upgraded_backpack": "Upgraded Backpack",
   "ediblebackpacks.msg.slots": "Backpack space: %s",
-  "ediblebackpacks.msg.full": "Your backpack is already at its limit"
+  "ediblebackpacks.msg.full": "Your backpack is already at its limit",
+  "ediblebackpacks.button.open": "Open backpack",
+  "ediblebackpacks.button.close": "Close backpack"
 }

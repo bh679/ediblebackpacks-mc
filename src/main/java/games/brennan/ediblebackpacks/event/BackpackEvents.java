@@ -77,18 +77,24 @@ public final class BackpackEvents {
         return true;
     }
 
+    /** Both attachment-backed bits the client needs; neither auto-syncs. */
+    private static void sync(ServerPlayer player) {
+        EBNetwork.syncSlotCount(player);
+        EBNetwork.syncPanelOpen(player);
+    }
+
     @SubscribeEvent
     public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) EBNetwork.syncSlotCount(player);
+        if (event.getEntity() instanceof ServerPlayer player) sync(player);
     }
 
     @SubscribeEvent
     public static void onRespawn(PlayerEvent.PlayerRespawnEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) EBNetwork.syncSlotCount(player);
+        if (event.getEntity() instanceof ServerPlayer player) sync(player);
     }
 
     @SubscribeEvent
     public static void onChangeDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) EBNetwork.syncSlotCount(player);
+        if (event.getEntity() instanceof ServerPlayer player) sync(player);
     }
 }
