@@ -6,7 +6,9 @@
   "mixins": [
     "AbstractContainerMenuAccessor",
     "SlotAccessor",
-    "InventoryMenuMixin"
+    "InventoryMenuMixin",
+    "ChestMenuMixin",
+    "ShulkerBoxMenuMixin"
   ],
   "client": [
     "EffectRenderingInventoryScreenMixin"

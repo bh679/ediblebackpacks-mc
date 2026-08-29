@@ -34,6 +34,24 @@ class ButtonPlacementTest {
     }
 
     @Test
+    void containerScreensMoveTheFixedAnchorsIntoTheTitleBar() {
+        for (ButtonAnchor anchor : new ButtonAnchor[] {ButtonAnchor.OFFHAND, ButtonAnchor.RECIPE_BOOK}) {
+            ButtonPlacement.Pos pos = ButtonPlacement.resolve(anchor, 0, 0, true);
+            // Chest GUIs are 176 wide with their first slot row at y 18; the inventory-only
+            // landmarks these anchors name would put the button on top of a container slot.
+            assertTrue(pos.y() + ButtonPlacement.HEIGHT <= 18, anchor + " must clear the first slot row");
+            assertTrue(pos.y() >= 0, anchor + " must stay inside the GUI");
+            assertTrue(pos.x() + ButtonPlacement.WIDTH <= 176, anchor + " must stay inside the GUI");
+        }
+    }
+
+    @Test
+    void containerScreensStillHonourAnExplicitPosition() {
+        // The player put it there on purpose; a chest is no reason to move it.
+        assertEquals(new ButtonPlacement.Pos(-30, 7), ButtonPlacement.resolve(ButtonAnchor.CUSTOM, -30, 7, true));
+    }
+
+    @Test
     void customIgnoredByTheFixedAnchors() {
         assertEquals(ButtonPlacement.resolve(ButtonAnchor.OFFHAND, 0, 0),
                      ButtonPlacement.resolve(ButtonAnchor.OFFHAND, 999, 999));
