@@ -15,7 +15,7 @@ class ButtonPlacementTest {
         ButtonPlacement.Pos pos = ButtonPlacement.resolve(ButtonAnchor.OFFHAND, 0, 0);
         // Portrait viewport ends at 75; offhand slot spans x 77..93, chrome from y 61.
         assertTrue(pos.x() > 75, "must not overlap the player portrait");
-        assertTrue(pos.x() <= 77, "must still sit over the offhand slot");
+        assertTrue(pos.x() >= 77 && pos.x() + ButtonPlacement.WIDTH <= 94, "must sit over the offhand slot");
         assertEquals(60, pos.y() + ButtonPlacement.HEIGHT, "bottom edge stops above the slot chrome");
     }
 
@@ -24,8 +24,16 @@ class ButtonPlacementTest {
         ButtonPlacement.Pos pos = ButtonPlacement.resolve(ButtonAnchor.RECIPE_BOOK, 0, 0);
         // Vanilla's own button is x 104..124 at y 61.
         assertTrue(pos.x() >= 124, "must not overlap vanilla's recipe button");
-        assertEquals(61, pos.y(), "level with it");
+        assertTrue(pos.y() >= 61 && pos.y() + ButtonPlacement.HEIGHT <= 79, "centred on it, not hanging off");
         assertTrue(pos.x() + ButtonPlacement.WIDTH <= 176, "stays inside the GUI");
+    }
+
+    @Test
+    void theButtonIsHalfTheOldEighteenBySixteen() {
+        // The glyph is scaled to match, so the two have to stay in step — a face that no longer
+        // divides evenly leaves the icon off-centre by half a pixel.
+        assertEquals(9, ButtonPlacement.WIDTH);
+        assertEquals(8, ButtonPlacement.HEIGHT);
     }
 
     @Test

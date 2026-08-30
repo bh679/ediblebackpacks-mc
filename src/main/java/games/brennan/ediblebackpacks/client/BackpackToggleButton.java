@@ -40,10 +40,18 @@ public final class BackpackToggleButton extends Button {
             ClientPanelState.panelsOpen() ? "ediblebackpacks.button.close" : "ediblebackpacks.button.open")));
     }
 
+    /**
+     * The item renderer only ever draws 16×16, so the glyph is scaled rather than positioned:
+     * half scale gives 8×8, which leaves a pixel of chrome either side of it in the 9×8 face.
+     * {@code renderItem} respects the current pose, so the transform is all it takes.
+     */
     @Override
     protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.renderWidget(graphics, mouseX, mouseY, partialTick);
-        // Centred in the 18×16 face: the item renders 16×16.
-        graphics.renderItem(icon, getX() + 1, getY());
+        graphics.pose().pushPose();
+        graphics.pose().translate(getX() + 0.5f, (float) getY(), 0.0f);
+        graphics.pose().scale(0.5f, 0.5f, 1.0f);
+        graphics.renderItem(icon, 0, 0);
+        graphics.pose().popPose();
     }
 }
