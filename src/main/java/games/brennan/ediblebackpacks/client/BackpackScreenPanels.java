@@ -3,8 +3,11 @@ package games.brennan.ediblebackpacks.client;
 import games.brennan.ediblebackpacks.EdibleBackpacks;
 import games.brennan.ediblebackpacks.config.EBClientConfig;
 import games.brennan.ediblebackpacks.menu.BackpackLayout;
+import games.brennan.ediblebackpacks.menu.BackpackQuickMove;
 import games.brennan.ediblebackpacks.registry.ModAttachments;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.api.distmarker.Dist;
@@ -17,10 +20,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Draws the two backpack panel backgrounds behind the appended slots on the
- * survival {@link InventoryScreen}. Slot items/highlights are rendered by the
- * vanilla screen loop (the slots live in the menu); only the chrome is drawn
- * here.
+ * Draws the two backpack panel backgrounds behind the appended slots — on the survival
+ * {@link InventoryScreen} and on every chest-shaped screen the panels were added to (they are
+ * all 176 wide, so the same layout math places them). Slot items/highlights are rendered by the
+ * vanilla screen loop (the slots live in the menu); only the chrome is drawn here.
+ *
+ * <p>Which screens those are is asked of the MENU, not the screen class: if the menu carries
+ * backpack slots there is chrome to draw, and if it does not — a furnace, a modded GUI — there
+ * is nothing here to do. That way this can never disagree with what the mixins actually did.</p>
  *
  * <p>Also the place the panels get positioned for the frame: {@link BackpackPanelLayout}
  * decides whether the recipe book is forcing them right of the GUI, and the chrome below
@@ -57,9 +64,10 @@ public final class BackpackScreenPanels {
 
     @SubscribeEvent
     public static void onRenderBackground(ContainerScreenEvent.Render.Background event) {
-        if (!(event.getContainerScreen() instanceof InventoryScreen screen)) return;
+        AbstractContainerScreen<?> screen = event.getContainerScreen();
+        if (!hasPanels(screen)) return;
 
-        Player player = screen.getMinecraft().player;
+        Player player = Minecraft.getInstance().player;
         if (player == null) return;
         int unlocked = player.getData(ModAttachments.BACKPACK).unlocked();
         placeButton(screen, unlocked);
@@ -86,8 +94,9 @@ public final class BackpackScreenPanels {
     @SubscribeEvent
     public static void onScreenInit(ScreenEvent.Init.Post event) {
         button = null;
-        if (!(event.getScreen() instanceof InventoryScreen screen)) return;
-        Player player = screen.getMinecraft().player;
+        if (!(event.getScreen() instanceof AbstractContainerScreen<?> screen)) return;
+        if (!hasPanels(screen)) return;
+        Player player = Minecraft.getInstance().player;
         if (player == null) return;
         // Spectators get no crafting GUI at all — vanilla skips its own recipe button there.
         // Turning the button off leaves the hotkey as the only way in, which is the point.
@@ -106,14 +115,23 @@ public final class BackpackScreenPanels {
      * without reopening the screen. Hidden entirely until the player has eaten a backpack —
      * there is nothing to open yet.
      */
-    private static void placeButton(InventoryScreen screen, int unlocked) {
+    private static void placeButton(AbstractContainerScreen<?> screen, int unlocked) {
         if (button == null) return;
         ButtonPlacement.Pos pos = ButtonPlacement.resolve(
-            EBClientConfig.buttonAnchor(), EBClientConfig.buttonX(), EBClientConfig.buttonY());
+            EBClientConfig.buttonAnchor(), EBClientConfig.buttonX(), EBClientConfig.buttonY(),
+            !(screen instanceof InventoryScreen));
         button.setPosition(screen.getGuiLeft() + pos.x(), screen.getGuiTop() + pos.y());
         button.visible = unlocked > 0;
         button.active = unlocked > 0;
         button.refreshTooltip();
+    }
+
+    /**
+     * True when this screen's menu is one the panels were appended to. Cheap enough to run per
+     * frame — it walks back from the end of the slot list, which is where the panels are.
+     */
+    private static boolean hasPanels(AbstractContainerScreen<?> screen) {
+        return screen != null && BackpackQuickMove.backpackStart(screen.getMenu().slots) >= 0;
     }
 
     private static void drawPanel(GuiGraphics g, int guiLeft, int guiTop, int unlocked,

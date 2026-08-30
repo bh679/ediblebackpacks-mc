@@ -2,7 +2,9 @@
 
 NeoForge 1.21.1 mod (`bh679/ediblebackpacks-mc`, pkg `games.brennan.ediblebackpacks`).
 Eat an `edible_backpack` item → +1 persistent backpack slot (cap 108), shown as two
-6×9 panels flanking the survival inventory screen. Slots unlock **down a column, then
+6×9 panels flanking the survival inventory screen and every chest-shaped screen (chests,
+trapped chests, ender chests, barrels, shulker boxes) — they are all 176 wide, so one set
+of layout math places the panels on all of them. Slots unlock **down a column, then
 across**, starting on the column closest to the player's inventory and growing outward
 (`menu/BackpackLayout`).
 
@@ -22,8 +24,14 @@ cap still does something instead of being stranded.
 - `storage/BackpackData` — per-player serializable attachment (`registry/ModAttachments`,
   `copyOnDeath`): unlocked count + 108-slot `ItemStackHandler` (always full-size; slot
   indices must stay stable for vanilla container sync).
-- `mixin/InventoryMenuMixin` — appends 108 `menu/BackpackSlot`s to the vanilla
-  `InventoryMenu` on BOTH sides. `BackpackSlot.mayPlace/mayPickup` are the
+- `mixin/InventoryMenuMixin`, `mixin/ChestMenuMixin`, `mixin/ShulkerBoxMenuMixin` — append 108
+  `menu/BackpackSlot`s to the vanilla `InventoryMenu`, `ChestMenu` (chests, trapped chests,
+  ender chests, barrels, every `GENERIC_9xN`) and `ShulkerBoxMenu` on BOTH sides, all through
+  `menu/BackpackSlotAppender`. Each mixin injects the ONE constructor every other constructor
+  and factory on that class delegates to via `this(...)`, so a single TAIL fires exactly once.
+  `BackpackSlotAppender` sits in `menu`, not `mixin`: Mixin refuses to class-load an ordinary
+  class out of a package it owns (accessor interfaces are exempt, which is why `SlotAccessor`
+  can be referenced from `BackpackSlot`). `BackpackSlot.mayPlace/mayPickup` are the
   server-authoritative lock; `isActive` is display-only.
   **Never leave a panel slot inactive while it can still accept items.** `moveItemStackTo`
   consults `mayPlace`, never `isActive`, so a hidden-but-live slot silently swallows
@@ -46,8 +54,8 @@ cap still does something instead of being stranded.
   `emptyInventory`, and vanilla's `transferState` (on every container close)
   matches slots by `(container, containerSlot)`, so without the marker another
   mod's item-handler slots overwrite this panel's sync bookkeeping.
-- `menu/BackpackQuickMove` — shift-click routing (called from `InventoryMenuMixin`'s
-  `quickMoveStack` HEAD inject): the panels act like extra space behind the vanilla
+- `menu/BackpackQuickMove` — shift-click routing for the survival menu (called from
+  `InventoryMenuMixin`'s `quickMoveStack` HEAD inject): the panels act like extra space behind the vanilla
   destinations — inventory/hotbar run vanilla's own hotbar↔inventory shuffle FIRST
   (armour/offhand auto-equip still wins) and only the leftovers overflow into the
   backpack, backpack → inventory, and
@@ -56,13 +64,23 @@ cap still does something instead of being stranded.
   inventory still lands somewhere visible. That extra call is safe where `INV_END` is
   not: the duplication `INV_END` guards against needs the source slot inside the
   destination range, and the result slot is 0.
+- `menu/ContainerQuickMove` — the same job for the chest-shaped menus, parameterised by the
+  container's size: container → inventory, inventory → container, backpack → container, each
+  overflowing into the next place the player can see. Intercepting is mandatory, not cosmetic —
+  vanilla's chest quick-move ends its player-side range at `slots.size()`, which now runs into
+  the panels, so left alone it would bypass both the inventory and the open/close lock.
 - `client/BackpackScreenPanels` — draws panel chrome on `ContainerScreenEvent.Render.Background`;
-  vanilla renders the slot items itself. Also owns `client/BackpackToggleButton`, added to the
+  vanilla renders the slot items itself. Which screens it acts on is asked of the MENU
+  (`BackpackQuickMove.backpackStart(slots) >= 0`), never the screen class, so it cannot disagree
+  with what the mixins did — all these GUIs are 176 wide, so the same layout math places them.
+  Also owns `client/BackpackToggleButton`, added to the
   screen at `ScreenEvent.Init.Post` (NeoForge's `addListener` puts a widget in both `children`
   and `renderables`) and re-positioned every frame — vanilla only moves its own widgets when
   the recipe book slides the GUI. The button is optional and movable: `config/EBClientConfig`
   (CLIENT toml) carries on/off plus a `ButtonAnchor` of OFFHAND / RECIPE_BOOK / CUSTOM x,y,
-  resolved by the pure, unit-tested `client/ButtonPlacement`. Switching it off is safe only
+  resolved by the pure, unit-tested `client/ButtonPlacement` — whose two preset anchors name
+  survival-screen landmarks, so on a chest screen both resolve to the title bar instead
+  (`CUSTOM` is still honoured verbatim). Switching it off is safe only
   because the hotkey exists.
 - Open/close toggle — `BackpackData.panelsOpen`, persisted and synced both ways by
   `network/PanelOpenPayload` (one id, `playBidirectional` + `DirectionalPayloadHandler`;
@@ -91,7 +109,8 @@ MINOR-aligned (X.Y.0). Never `git tag` manually.
 
 `./gradlew test` covers two layers:
 - pure logic (policy + layout math), no Minecraft on the classpath;
-- `InventoryMenuQuickMoveTest` — a **real** `InventoryMenu` with the mixin applied, driven
+- `InventoryMenuQuickMoveTest` / `ChestMenuQuickMoveTest` — **real** `InventoryMenu`,
+  `ChestMenu` and `ShulkerBoxMenu` instances with the mixins applied, driven
   on an ephemeral server (`neoForge.unitTest` + NeoForge's `EphemeralTestServerProvider` +
   a `FakePlayer`), so a shift-click there is the call the server really runs. Levels are
   created reflectively: that server skips `loadLevel`, and the spawn search needs a ticking

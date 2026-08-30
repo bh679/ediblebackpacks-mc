@@ -129,8 +129,12 @@ public final class BackpackQuickMove {
         };
     }
 
-    /** Index of the first backpack slot, or -1 when the block isn't present/contiguous. */
-    private static int backpackStart(List<Slot> slots) {
+    /**
+     * Index of the first backpack slot, or -1 when the block isn't present/contiguous. Shared
+     * with {@link ContainerQuickMove}, which needs the same "another mod appended slots after
+     * ours" guard against a differently shaped menu.
+     */
+    public static int backpackStart(List<Slot> slots) {
         int end = -1;
         for (int i = slots.size() - 1; i >= 0; i--) {
             if (slots.get(i) instanceof BackpackSlot) {

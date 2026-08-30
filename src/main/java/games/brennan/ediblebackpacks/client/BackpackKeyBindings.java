@@ -4,7 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import games.brennan.ediblebackpacks.EdibleBackpacks;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -20,7 +20,7 @@ import net.neoforged.neoforge.client.settings.KeyConflictContext;
  *
  * <p>Handled twice over because the two places a player would press it read keys through
  * different paths: vanilla only ticks {@link KeyMapping}s while no screen is open
- * ({@link #onClientTick}), so the inventory screen — where the panels actually are — needs
+ * ({@link #onClientTick}), so the container screens — where the panels actually are — need
  * {@link #onScreenKeyPressed}. Both land on {@link ClientPanelState#toggle()}, so the button
  * and the key can never disagree.</p>
  */
@@ -50,13 +50,13 @@ public final class BackpackKeyBindings {
     }
 
     /**
-     * Presses made with the inventory open, where vanilla never ticks key mappings. Matched
-     * against the bound key directly, and left un-cancelled so anything else watching the
-     * key still sees it.
+     * Presses made with a container screen open, where vanilla never ticks key mappings — the
+     * survival inventory or any chest-shaped GUI the panels also appear in. Matched against the
+     * bound key directly, and left un-cancelled so anything else watching the key still sees it.
      */
     @SubscribeEvent
     public static void onScreenKeyPressed(ScreenEvent.KeyPressed.Pre event) {
-        if (!(event.getScreen() instanceof InventoryScreen)) return;
+        if (!(event.getScreen() instanceof AbstractContainerScreen<?>)) return;
         // isActiveAndMatches has no unbound check of its own, and an unbound mapping holds
         // the UNKNOWN key — never let it swallow a keystroke while it has no key assigned.
         if (TOGGLE.isUnbound()) return;
