@@ -24,6 +24,14 @@ import net.minecraft.world.item.ItemStack;
  */
 public final class BackpackToggleButton extends Button {
 
+    /**
+     * Translucent wash in the GUI's own face grey (the {@code BackpackScreenPanels} palette),
+     * drawn over the glyph to pull its colour toward the chrome around it. Vanilla's own idiom
+     * for a muted item — the recipe book washes ghost ingredients the same way — and unlike a
+     * shader tint it needs nothing of the item's render type.
+     */
+    private static final int SCRIM = 0x99C6C6C6;
+
     private final ItemStack icon = new ItemStack(ModItems.EDIBLE_BACKPACK.get());
 
     public BackpackToggleButton() {
@@ -49,10 +57,18 @@ public final class BackpackToggleButton extends Button {
     @Override
     protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.renderWidget(graphics, mouseX, mouseY, partialTick);
+        int x = getX() + ButtonPlacement.PADDING;
+        int y = getY() + ButtonPlacement.PADDING;
         graphics.pose().pushPose();
-        graphics.pose().translate(getX() + ButtonPlacement.PADDING, getY() + ButtonPlacement.PADDING, 0.0f);
+        graphics.pose().translate(x, y, 0.0f);
         graphics.pose().scale(0.5f, 0.5f, 1.0f);
-        graphics.renderItem(icon, 0, 0);
+        graphics.renderFakeItem(icon, 0, 0);
+        graphics.pose().popPose();
+        // Above the item, which draws at z 150 — a plain fill at the GUI's own depth would go
+        // under it and wash nothing.
+        graphics.pose().pushPose();
+        graphics.pose().translate(0.0f, 0.0f, 200.0f);
+        graphics.fill(x, y, x + ButtonPlacement.GLYPH, y + ButtonPlacement.GLYPH, SCRIM);
         graphics.pose().popPose();
     }
 }
