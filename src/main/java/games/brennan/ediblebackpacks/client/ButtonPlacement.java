@@ -21,8 +21,8 @@ public final class ButtonPlacement {
     /**
      * Chrome on every side of the glyph, which together with it sets the face at 10×10 —
      * {@link #PADDING} and {@link #GLYPH} are the numbers that matter, the size follows from
-     * them. That is half of vanilla's 20×18 recipe-book button, whose sprites this one borrows
-     * ({@code BackpackToggleButton}): it sits OVER the inventory rather than beside it, where
+     * them. That is close to half of vanilla's 20×18 recipe-book button, whose chrome this one
+     * wears ({@code BackpackToggleButton}): it sits OVER the inventory rather than beside it, where
      * anything larger reads as a third piece of GUI furniture instead of a small affordance.
      * The glyph shrank with the face rather than filling it — an icon out to the edges read as
      * cramped, not small.

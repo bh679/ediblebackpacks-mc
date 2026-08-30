@@ -2,21 +2,22 @@ package games.brennan.ediblebackpacks.client;
 
 import games.brennan.ediblebackpacks.registry.ModItems;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.ImageButton;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
 /**
  * The open/close button on the inventory and chest screens — where it sits, and whether it is
  * there at all, is the player's choice ({@code config/EBClientConfig}; the hotkey works either
- * way). It borrows vanilla's own recipe-book button sprites rather than the generic widget
- * chrome, so it reads as a sibling of the control it sits beside — including the highlighted
- * variant on hover, which {@link ImageButton} swaps in for free. Drawn at
- * {@link ButtonPlacement#WIDTH}×{@link ButtonPlacement#HEIGHT}, half the sprite's native
- * 20×18: this one sits over the inventory rather than beside it, where anything larger reads
- * as a third piece of GUI furniture instead of a small affordance.
+ * way).
+ *
+ * <p>The chrome is vanilla's recipe-book button, drawn rather than blitted. Its sprite
+ * ({@code recipe_book/button}) has the book artwork baked into the texture, so borrowing the
+ * sprite meant wearing that icon underneath this one's — two pictures in a ten-pixel box. The
+ * frame around it is only a 1px bevel, and the palette below is sampled straight from it, so
+ * drawing it gives the same button minus the picture. It also sizes to anything without
+ * stretching a 20×18 texture, which is what the sprite would have been doing here.</p>
  *
  * <p>The glyph is an {@code edible_backpack} item — no new texture asset, which also keeps the
  * icon in step if the item art ever changes — and its colour carries the state. Open, or under
@@ -32,13 +33,22 @@ import net.minecraft.world.item.ItemStack;
  * ButtonPlacement} does the anchor math) — opening the recipe book slides the whole GUI
  * right, and vanilla only moves its own widgets.</p>
  */
-public final class BackpackToggleButton extends ImageButton {
+public final class BackpackToggleButton extends Button {
+
+    // Sampled from gui/sprites/recipe_book/button.png and button_highlighted.png. The idle
+    // face is the same grey the panels are drawn in; hover goes to vanilla's blue.
+    private static final int FACE = 0xFFC6C6C6;
+    private static final int SHADE = 0xFF555555;
+    private static final int HOVER_FACE = 0xFF8892C9;
+    private static final int HOVER_SHADE = 0xFF343E75;
+    /** Both sprites are lit from the top-left with the same white, hovered or not. */
+    private static final int LIGHT = 0xFFFFFFFF;
 
     /**
-     * Translucent wash in the GUI's own face grey (the {@code BackpackScreenPanels} palette),
-     * drawn over the glyph to pull its colour toward the chrome around it. Vanilla's own idiom
-     * for a muted item — the recipe book washes ghost ingredients the same way — and unlike a
-     * shader tint it needs nothing of the item's render type.
+     * Translucent wash in the GUI's own face grey, drawn over the glyph to pull its colour
+     * toward the chrome around it. Vanilla's own idiom for a muted item — the recipe book
+     * washes ghost ingredients the same way — and unlike a shader tint it needs nothing of the
+     * item's render type.
      */
     private static final int SCRIM = 0x99C6C6C6;
 
@@ -48,12 +58,10 @@ public final class BackpackToggleButton extends ImageButton {
     private final ItemStack icon = new ItemStack(ModItems.EDIBLE_BACKPACK.get());
 
     public BackpackToggleButton() {
-        super(0, 0, ButtonPlacement.WIDTH, ButtonPlacement.HEIGHT,
-            RecipeBookComponent.RECIPE_BUTTON_SPRITES,
-            b -> {
-                ClientPanelState.toggle();
-                ((BackpackToggleButton) b).refreshTooltip();
-            }, Component.empty());
+        super(0, 0, ButtonPlacement.WIDTH, ButtonPlacement.HEIGHT, Component.empty(), b -> {
+            ClientPanelState.toggle();
+            ((BackpackToggleButton) b).refreshTooltip();
+        }, DEFAULT_NARRATION);
         refreshTooltip();
     }
 
@@ -64,8 +72,9 @@ public final class BackpackToggleButton extends ImageButton {
     }
 
     @Override
-    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        super.renderWidget(graphics, mouseX, mouseY, partialTick);
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        boolean lit = isHoveredOrFocused();
+        drawChrome(graphics, lit);
 
         int x = getX() + ButtonPlacement.PADDING;
         int y = getY() + ButtonPlacement.PADDING;
@@ -75,7 +84,8 @@ public final class BackpackToggleButton extends ImageButton {
         graphics.renderFakeItem(icon, 0, 0);
         graphics.pose().popPose();
 
-        if (vivid()) return;
+        // Full colour while the backpack is open, and while the cursor is on the button.
+        if (ClientPanelState.panelsOpen() || lit) return;
         // Above the item, which draws at z 150 — a plain fill at the GUI's own depth would go
         // under it and wash nothing.
         graphics.pose().pushPose();
@@ -84,8 +94,25 @@ public final class BackpackToggleButton extends ImageButton {
         graphics.pose().popPose();
     }
 
-    /** Full colour while the backpack is open, and while the cursor is on the button. */
-    private boolean vivid() {
-        return ClientPanelState.panelsOpen() || isHovered();
+    /**
+     * The recipe button's bevel: white along the top and left, shadow along the bottom and
+     * right, and the four corner pixels left out — the same 1px cut the vanilla sprite has,
+     * which is what keeps it from reading as a hard rectangle.
+     */
+    private void drawChrome(GuiGraphics g, boolean lit) {
+        int face = lit ? HOVER_FACE : FACE;
+        int shade = lit ? HOVER_SHADE : SHADE;
+        int x0 = getX();
+        int y0 = getY();
+        int x1 = x0 + getWidth();
+        int y1 = y0 + getHeight();
+
+        g.fill(x0 + 1, y0, x1 - 1, y1, face);
+        g.fill(x0, y0 + 1, x1, y1 - 1, face);
+
+        g.fill(x0 + 1, y0, x1 - 1, y0 + 1, LIGHT);
+        g.fill(x0, y0 + 1, x0 + 1, y1 - 1, LIGHT);
+        g.fill(x0 + 1, y1 - 1, x1 - 1, y1, shade);
+        g.fill(x1 - 1, y0 + 1, x1, y1 - 1, shade);
     }
 }
