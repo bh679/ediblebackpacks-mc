@@ -19,34 +19,39 @@ import games.brennan.ediblebackpacks.config.ButtonAnchor;
 public final class ButtonPlacement {
 
     /**
-     * Half the previous 18×16, itself already under vanilla's 20×18 recipe-book button: this one
-     * sits over the inventory rather than beside it, and every step down has read as less of a
-     * third piece of GUI furniture and more of a small affordance. The item glyph is drawn at
-     * half scale to match (see {@code BackpackToggleButton}), leaving a pixel of chrome either
-     * side of an 8×8 icon.
+     * A full pixel of chrome on every side of the 8×8 glyph, which is what sets the face at
+     * 10×10 — {@link #PADDING} is the number that matters, the size follows from it. Still well
+     * under vanilla's 20×18 recipe-book button: this one sits over the inventory rather than
+     * beside it, where anything bigger reads as a third piece of GUI furniture instead of a
+     * small affordance. The glyph is drawn at half scale to match; see
+     * {@code BackpackToggleButton}.
      */
-    public static final int WIDTH = 9;
-    public static final int HEIGHT = 8;
+    public static final int PADDING = 1;
+    /** The item renderer's only size, halved — see {@code BackpackToggleButton}. */
+    public static final int GLYPH = 8;
+
+    public static final int WIDTH = GLYPH + PADDING * 2;
+    public static final int HEIGHT = GLYPH + PADDING * 2;
 
     /**
      * Above the offhand slot, centred on it (77..93) and well clear of the portrait viewport
      * ending at 75. Ending at y 60 still leaves the slot's chrome (from 61) untouched — the
      * button lost its height off the top, so it sits where it always did.
      */
-    public static final int OFFHAND_X = 81;
-    public static final int OFFHAND_Y = 52;
+    public static final int OFFHAND_X = 80;
+    public static final int OFFHAND_Y = 50;
 
     /** Two pixels right of vanilla's recipe-book button (x 104..124, y 61..79), centred on it. */
     public static final int RECIPE_BOOK_X = 126;
-    public static final int RECIPE_BOOK_Y = 66;
+    public static final int RECIPE_BOOK_Y = 65;
 
     /**
      * Chest-shaped screens: the free right end of the title bar. Those GUIs are also 176 wide,
-     * their title bar runs y 1..17 and the first slot row starts at y 18, so an 8px-tall button
-     * centred at y 5 clears both; x 161 keeps the 6px the chrome needs on the right.
+     * their title bar runs y 1..17 and the first slot row starts at y 18, so a 10px-tall button
+     * centred at y 4 clears both; x 160 keeps the 6px the chrome needs on the right.
      */
-    public static final int CONTAINER_X = 161;
-    public static final int CONTAINER_Y = 5;
+    public static final int CONTAINER_X = 160;
+    public static final int CONTAINER_Y = 4;
 
     /** A button position relative to the screen's top-left corner. */
     public record Pos(int x, int y) {}

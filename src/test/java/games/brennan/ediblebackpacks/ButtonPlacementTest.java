@@ -29,11 +29,11 @@ class ButtonPlacementTest {
     }
 
     @Test
-    void theButtonIsHalfTheOldEighteenBySixteen() {
-        // The glyph is scaled to match, so the two have to stay in step — a face that no longer
-        // divides evenly leaves the icon off-centre by half a pixel.
-        assertEquals(9, ButtonPlacement.WIDTH);
-        assertEquals(8, ButtonPlacement.HEIGHT);
+    void theFaceIsTheGlyphPlusPaddingOnEverySide() {
+        // The button draws the glyph inset by PADDING, so the face has to be derived from it —
+        // a size that drifts from this leaves the icon off-centre.
+        assertEquals(ButtonPlacement.GLYPH + ButtonPlacement.PADDING * 2, ButtonPlacement.WIDTH);
+        assertEquals(ButtonPlacement.GLYPH + ButtonPlacement.PADDING * 2, ButtonPlacement.HEIGHT);
     }
 
     @Test
