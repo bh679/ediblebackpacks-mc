@@ -2,7 +2,9 @@
 
 NeoForge 1.21.1 mod (`bh679/ediblebackpacks-mc`, pkg `games.brennan.ediblebackpacks`).
 Eat an `edible_backpack` item → +1 persistent backpack slot (cap 108), shown as two
-6×9 panels flanking the survival inventory screen. Slots unlock **down a column, then
+6×9 panels flanking the survival inventory screen and every chest-shaped screen (chests,
+trapped chests, ender chests, barrels, shulker boxes) — they are all 176 wide, so one set
+of layout math places the panels on all of them. Slots unlock **down a column, then
 across**, starting on the column closest to the player's inventory and growing outward
 (`menu/BackpackLayout`).
 
