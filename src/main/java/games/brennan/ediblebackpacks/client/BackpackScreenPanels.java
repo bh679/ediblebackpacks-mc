@@ -111,7 +111,9 @@ public final class BackpackScreenPanels {
 
     /**
      * Follows the GUI: toggling the recipe book moves {@code leftPos}, and vanilla only
-     * repositions its own widgets. The anchor is re-read every frame so a config edit lands
+     * repositions its own widgets. The button's spot above the panel is outside the GUI box,
+     * so a screen too tall for the window to leave room there gets the fallback instead —
+     * which is why {@code topPos} is handed to the placement math every frame. The anchor is re-read every frame so a config edit lands
      * without reopening the screen. Hidden entirely until the player has eaten a backpack —
      * there is nothing to open yet.
      */
@@ -119,7 +121,7 @@ public final class BackpackScreenPanels {
         if (button == null) return;
         ButtonPlacement.Pos pos = ButtonPlacement.resolve(
             EBClientConfig.buttonAnchor(), EBClientConfig.buttonX(), EBClientConfig.buttonY(),
-            !(screen instanceof InventoryScreen));
+            !(screen instanceof InventoryScreen), ButtonPlacement.roomAbove(screen.getGuiTop()));
         button.setPosition(screen.getGuiLeft() + pos.x(), screen.getGuiTop() + pos.y());
         button.visible = unlocked > 0;
         button.active = unlocked > 0;
