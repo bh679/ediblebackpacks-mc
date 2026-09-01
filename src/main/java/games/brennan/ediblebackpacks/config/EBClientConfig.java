@@ -25,29 +25,33 @@ public final class EBClientConfig {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
 
         BUTTON_ENABLED = builder
-            .comment("Show the open/close button on the inventory screen.",
+            .comment("Show the open/close button on the inventory and container screens.",
                 "The keybind (Options -> Controls -> Edible Backpacks) still works when this is off.")
             .define("buttonEnabled", true);
 
         BUTTON_ANCHOR = builder
             .comment("Where the button sits.",
-                "OFFHAND = above the shield slot.",
-                "RECIPE_BOOK = right of the vanilla recipe-book button.",
-                "CUSTOM = at buttonX/buttonY below.")
-            .defineEnum("buttonAnchor", ButtonAnchor.OFFHAND);
+                "ABOVE_PANEL = just above the left backpack panel, the same spot on every screen.",
+                "CUSTOM = at buttonX/buttonY below.",
+                "The old preset spots are still available as CUSTOM coordinates:",
+                "above the shield slot = " + ButtonPlacement.OFFHAND_X + ", " + ButtonPlacement.OFFHAND_Y,
+                "right of the recipe-book button = "
+                    + ButtonPlacement.RECIPE_BOOK_X + ", " + ButtonPlacement.RECIPE_BOOK_Y,
+                "(both are inventory-screen landmarks: in a chest they land on container slots.)")
+            .defineEnum("buttonAnchor", ButtonAnchor.ABOVE_PANEL);
 
         BUTTON_X = builder
-            // The CUSTOM defaults are the OFFHAND anchor's, so switching to CUSTOM starts
+            // The CUSTOM defaults are the ABOVE_PANEL anchor's, so switching to CUSTOM starts
             // the button where it already was. These are compile-time constants, so naming
             // ButtonPlacement here classloads nothing.
-            .comment("CUSTOM only: button x, relative to the inventory GUI's top-left corner "
-                + "(the GUI is 176 wide).")
-            .defineInRange("buttonX", ButtonPlacement.OFFHAND_X, COORD_MIN, COORD_MAX);
+            .comment("CUSTOM only: button x, relative to the GUI's top-left corner "
+                + "(the GUI is 176 wide; negative values sit left of it).")
+            .defineInRange("buttonX", ButtonPlacement.ABOVE_PANEL_X, COORD_MIN, COORD_MAX);
 
         BUTTON_Y = builder
-            .comment("CUSTOM only: button y, relative to the inventory GUI's top-left corner "
-                + "(the GUI is 166 tall).")
-            .defineInRange("buttonY", ButtonPlacement.OFFHAND_Y, COORD_MIN, COORD_MAX);
+            .comment("CUSTOM only: button y, relative to the GUI's top-left corner "
+                + "(the inventory GUI is 166 tall; negative values sit above it).")
+            .defineInRange("buttonY", ButtonPlacement.ABOVE_PANEL_Y, COORD_MIN, COORD_MAX);
 
         SPEC = builder.build();
     }
@@ -60,14 +64,14 @@ public final class EBClientConfig {
     }
 
     public static ButtonAnchor buttonAnchor() {
-        return SPEC.isLoaded() ? BUTTON_ANCHOR.get() : ButtonAnchor.OFFHAND;
+        return SPEC.isLoaded() ? BUTTON_ANCHOR.get() : ButtonAnchor.ABOVE_PANEL;
     }
 
     public static int buttonX() {
-        return SPEC.isLoaded() ? BUTTON_X.get() : ButtonPlacement.OFFHAND_X;
+        return SPEC.isLoaded() ? BUTTON_X.get() : ButtonPlacement.ABOVE_PANEL_X;
     }
 
     public static int buttonY() {
-        return SPEC.isLoaded() ? BUTTON_Y.get() : ButtonPlacement.OFFHAND_Y;
+        return SPEC.isLoaded() ? BUTTON_Y.get() : ButtonPlacement.ABOVE_PANEL_Y;
     }
 }

@@ -77,11 +77,15 @@ cap still does something instead of being stranded.
   screen at `ScreenEvent.Init.Post` (NeoForge's `addListener` puts a widget in both `children`
   and `renderables`) and re-positioned every frame — vanilla only moves its own widgets when
   the recipe book slides the GUI. The button is optional and movable: `config/EBClientConfig`
-  (CLIENT toml) carries on/off plus a `ButtonAnchor` of OFFHAND / RECIPE_BOOK / CUSTOM x,y,
-  resolved by the pure, unit-tested `client/ButtonPlacement` — whose two preset anchors name
-  survival-screen landmarks, so on a chest screen both resolve to the title bar instead
-  (`CUSTOM` is still honoured verbatim). Switching it off is safe only
-  because the hotkey exists.
+  (CLIENT toml) carries on/off plus a `ButtonAnchor` of ABOVE_PANEL / CUSTOM x,y, resolved by
+  the pure, unit-tested `client/ButtonPlacement`. `ABOVE_PANEL` puts it just above the left
+  panel, outside the GUI box, and is the same spot on every screen — nowhere inside the box is
+  free everywhere: the survival landmarks the old OFFHAND / RECIPE_BOOK presets named are
+  container slots in a chest, and the chest title bar they used to fall back to is where
+  sorting mods put their button row. Those coordinates survive as constants the config comment
+  offers for `CUSTOM`, which is honoured verbatim. A screen with no room above it
+  (`ButtonPlacement.roomAbove(guiTop)`) falls back inside the box. Switching it off is safe
+  only because the hotkey exists.
 - Open/close toggle — `BackpackData.panelsOpen`, persisted and synced both ways by
   `network/PanelOpenPayload` (one id, `playBidirectional` + `DirectionalPayloadHandler`;
   registering the same payload twice is a hard error). Closed is a real lock, not a hide:
