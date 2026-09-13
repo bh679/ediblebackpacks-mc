@@ -33,7 +33,7 @@ class BackpackPolicyTest {
     void grantsTopUpToTheCap() {
         assertEquals(1, BackpackPolicy.effectiveGrant(0, 1, 108));
         assertEquals(9, BackpackPolicy.effectiveGrant(99, 9, 108));
-        // Near the cap an upgraded backpack grants what's left, not nothing —
+        // Near the cap a golden edible backpack grants what's left, not nothing —
         // there is no craft-back-to-singles escape hatch (non-stackable item).
         assertEquals(8, BackpackPolicy.effectiveGrant(100, 9, 108));
         assertEquals(0, BackpackPolicy.effectiveGrant(108, 9, 108));

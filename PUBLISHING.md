@@ -34,7 +34,7 @@ submitted for review once it has an icon, description, and at least one version.
 > a time as you eat more, up to 108 slots. The panels tuck away while the crafting recipe book is
 > open, so they never fight the vanilla UI.
 >
-> Backpacks don't stack, but they do compress: nine ordinary packs craft into a golden Upgraded
+> Backpacks don't stack, but they do compress: eight ordinary packs around a Gold Block craft into a Golden Edible
 > Backpack worth nine slots in a single bite.
 >
 > By default your backpack survives death. Servers can flip that with `resetOnDeath` in

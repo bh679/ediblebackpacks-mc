@@ -14,7 +14,7 @@
     "has_the_recipe": {
       "trigger": "minecraft:recipe_unlocked",
       "conditions": {
-        "recipe": "ediblebackpacks:upgraded_backpack"
+        "recipe": "ediblebackpacks:golden_edible_backpack"
       }
     }
   },
@@ -26,7 +26,7 @@
   ],
   "rewards": {
     "recipes": [
-      "ediblebackpacks:upgraded_backpack"
+      "ediblebackpacks:golden_edible_backpack"
     ]
   }
 }
