@@ -9,14 +9,14 @@ across**, starting on the column closest to the player's inventory and growing o
 (`menu/BackpackLayout`).
 
 Two items, both `EdibleBackpackItem` with a different `slotsGranted`: `edible_backpack` (1)
-and `upgraded_backpack` (9). Both non-stackable; 8 singles ringing a `minecraft:gold_block` in the centre craft into one
-upgraded (shaped, so the block can only sit in the middle; one-way only — an 8-count result is
+and `golden_edible_backpack` (9). Both non-stackable; 8 singles ringing a `minecraft:gold_block` in the centre craft into one
+golden (shaped, so the block can only sit in the middle; one-way only — an 8-count result is
 invalid against a max stack size of 1, which is exactly what the reverse recipe would need).
 The recipe reaches the recipe book the vanilla way, through a recipe advancement
-(`data/ediblebackpacks/advancement/recipes/misc/upgraded_backpack.json`, folder singular since
+(`data/ediblebackpacks/advancement/recipes/misc/golden_edible_backpack.json`, folder singular since
 1.21): holding an `edible_backpack` unlocks it. Being 3×3 it shows in a crafting table's book,
 not the 2×2 inventory one.
-Grants top up to the cap (`BackpackPolicy.effectiveGrant`) so an upgraded backpack near the
+Grants top up to the cap (`BackpackPolicy.effectiveGrant`) so a golden edible backpack near the
 cap still does something instead of being stranded.
 
 ## Architecture map

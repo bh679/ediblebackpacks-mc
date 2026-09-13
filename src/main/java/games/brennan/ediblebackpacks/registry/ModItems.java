@@ -13,13 +13,13 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 /**
  * Item registry: the plain edible backpack (+1 slot) and its 3×3 compressed
- * form (+9 slots), which craft into each other in both directions.
+ * form, the golden edible backpack (+9 slots). The recipe is one-way.
  */
 @EventBusSubscriber(modid = EdibleBackpacks.MOD_ID)
 public final class ModItems {
 
-    /** Slots granted by one upgraded backpack — also the 3×3 recipe's input count. */
-    public static final int UPGRADED_SLOTS = 9;
+    /** Slots granted by one golden edible backpack — also the 3×3 recipe's input count. */
+    public static final int GOLDEN_SLOTS = 9;
 
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(EdibleBackpacks.MOD_ID);
 
@@ -28,9 +28,9 @@ public final class ModItems {
         () -> new EdibleBackpackItem(new Item.Properties(), 1)
     );
 
-    public static final DeferredItem<Item> UPGRADED_BACKPACK = ITEMS.register(
-        "upgraded_backpack",
-        () -> new EdibleBackpackItem(new Item.Properties(), UPGRADED_SLOTS)
+    public static final DeferredItem<Item> GOLDEN_EDIBLE_BACKPACK = ITEMS.register(
+        "golden_edible_backpack",
+        () -> new EdibleBackpackItem(new Item.Properties(), GOLDEN_SLOTS)
     );
 
     private ModItems() {}
@@ -44,7 +44,7 @@ public final class ModItems {
         if (event.getTabKey() == CreativeModeTabs.FOOD_AND_DRINKS
             || event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
             event.accept(EDIBLE_BACKPACK.get());
-            event.accept(UPGRADED_BACKPACK.get());
+            event.accept(GOLDEN_EDIBLE_BACKPACK.get());
         }
     }
 }
