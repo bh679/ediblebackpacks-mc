@@ -18,6 +18,9 @@ The recipe reaches the recipe book the vanilla way, through a recipe advancement
 not the 2×2 inventory one.
 Grants top up to the cap (`BackpackPolicy.effectiveGrant`) so a golden edible backpack near the
 cap still does something instead of being stranded.
+Food: `PLAIN_FOOD` copies `Foods.APPLE`, `GOLDEN_FOOD` copies `Foods.GOLDEN_APPLE` (effects
+included), both with `canAlwaysEat` forced on; vanilla's `super.finishUsingItem` applies them.
+At the slot cap `use()` still refuses, so the food is never eaten for nothing.
 
 ## Architecture map
 

@@ -12,6 +12,7 @@ import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.food.Foods;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -19,7 +20,9 @@ import net.minecraft.world.level.Level;
 /**
  * An edible backpack. Eating one permanently unlocks {@link #slotsGranted}
  * backpack slots (server-authoritative, capped by config {@code maxSlots}).
- * Zero nutrition, always edible — the point is the storage, not the meal.
+ * Each backpack also feeds you: the plain one like an apple, the golden one like
+ * a golden apple (see {@link #PLAIN_FOOD} / {@link #GOLDEN_FOOD}). Both stay
+ * edible on a full hunger bar — the storage is still the point.
  *
  * <p>Non-stackable: a backpack is a bulky object, and stacking would make the
  * compressed variant pointless.</p>
@@ -30,17 +33,23 @@ import net.minecraft.world.level.Level;
  */
 public final class EdibleBackpackItem extends Item {
 
-    public static final FoodProperties FOOD = new FoodProperties.Builder()
-        .nutrition(0)
-        .saturationModifier(0f)
-        .alwaysEdible()
-        .build();
+    /** An apple's hunger and saturation, but edible on a full hunger bar. */
+    public static final FoodProperties PLAIN_FOOD = alwaysEdible(Foods.APPLE);
+
+    /** Exactly a golden apple: hunger, saturation, Regeneration II and Absorption. */
+    public static final FoodProperties GOLDEN_FOOD = alwaysEdible(Foods.GOLDEN_APPLE);
 
     private final int slotsGranted;
 
-    public EdibleBackpackItem(Properties properties, int slotsGranted) {
-        super(properties.food(FOOD).stacksTo(1));
+    public EdibleBackpackItem(Properties properties, FoodProperties food, int slotsGranted) {
+        super(properties.food(food).stacksTo(1));
         this.slotsGranted = slotsGranted;
+    }
+
+    /** Copy of a vanilla food with {@code canAlwaysEat} forced on, so values track vanilla. */
+    private static FoodProperties alwaysEdible(FoodProperties vanilla) {
+        return new FoodProperties(vanilla.nutrition(), vanilla.saturation(), true,
+            vanilla.eatSeconds(), vanilla.usingConvertsTo(), vanilla.effects());
     }
 
     public int slotsGranted() {
