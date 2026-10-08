@@ -25,12 +25,12 @@ public final class ModItems {
 
     public static final DeferredItem<Item> EDIBLE_BACKPACK = ITEMS.register(
         "edible_backpack",
-        () -> new EdibleBackpackItem(new Item.Properties(), 1)
+        () -> new EdibleBackpackItem(new Item.Properties(), EdibleBackpackItem.PLAIN_FOOD, 1)
     );
 
     public static final DeferredItem<Item> GOLDEN_EDIBLE_BACKPACK = ITEMS.register(
         "golden_edible_backpack",
-        () -> new EdibleBackpackItem(new Item.Properties(), GOLDEN_SLOTS)
+        () -> new EdibleBackpackItem(new Item.Properties(), EdibleBackpackItem.GOLDEN_FOOD, GOLDEN_SLOTS)
     );
 
     private ModItems() {}

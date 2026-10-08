@@ -3,6 +3,10 @@
 A NeoForge 1.21.1 mod: **eat a backpack to permanently grow your personal backpack
 storage by one slot.**
 
+- A backpack is a meal too: the plain one fills hunger like an apple, the golden one
+  works like a golden apple (Regeneration II + Absorption). Both can be eaten on a full
+  hunger bar, but not once your backpack is at its slot cap.
+
 - Backpack storage renders as two 6×9 panels flanking the vanilla survival inventory
   screen (up to **108 slots**). Slots unlock down a column at a time, starting with the
   column closest to your inventory and growing outward. Panels hide while the crafting
