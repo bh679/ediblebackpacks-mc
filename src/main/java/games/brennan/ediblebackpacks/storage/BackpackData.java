@@ -1,5 +1,6 @@
 package games.brennan.ediblebackpacks.storage;
 
+import games.brennan.ediblebackpacks.config.AutoCollectMode;
 import games.brennan.ediblebackpacks.menu.BackpackLayout;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -16,6 +17,7 @@ public final class BackpackData implements INBTSerializable<CompoundTag> {
 
     private int unlocked = 0;
     private boolean panelsOpen = true;
+    private AutoCollectMode autoCollect = AutoCollectMode.WHILE_OPEN;
     private final ItemStackHandler items = new ItemStackHandler(BackpackLayout.MAX_SLOTS);
 
     public int unlocked() {
@@ -40,6 +42,19 @@ public final class BackpackData implements INBTSerializable<CompoundTag> {
         this.panelsOpen = value;
     }
 
+    /**
+     * The player's auto-collect choice, sent from their client config
+     * ({@code network/AutoCollectPayload}). Kept here, saved, and carried through death so
+     * pickups follow it even before the next login re-sends it.
+     */
+    public AutoCollectMode autoCollect() {
+        return autoCollect;
+    }
+
+    public void setAutoCollect(AutoCollectMode value) {
+        this.autoCollect = value == null ? AutoCollectMode.WHILE_OPEN : value;
+    }
+
     public ItemStackHandler items() {
         return items;
     }
@@ -49,6 +64,7 @@ public final class BackpackData implements INBTSerializable<CompoundTag> {
         CompoundTag tag = new CompoundTag();
         tag.putInt("unlocked", unlocked);
         tag.putBoolean("panelsOpen", panelsOpen);
+        tag.putString("autoCollect", autoCollect.name());
         tag.put("items", items.serializeNBT(provider));
         return tag;
     }
@@ -59,6 +75,8 @@ public final class BackpackData implements INBTSerializable<CompoundTag> {
         // Saves written before the toggle existed have no tag — those players had the
         // panels showing, so absent means open.
         panelsOpen = !tag.contains("panelsOpen") || tag.getBoolean("panelsOpen");
+        // Older saves have no tag: they collected while open, so that is what they keep.
+        autoCollect = AutoCollectMode.byName(tag.getString("autoCollect"));
         if (tag.contains("items")) {
             items.deserializeNBT(provider, tag.getCompound("items"));
         }

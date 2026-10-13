@@ -24,6 +24,7 @@ public final class EBNetwork {
         // handlers rides a DirectionalPayloadHandler rather than two registrations.
         registrar.playBidirectional(PanelOpenPayload.TYPE, PanelOpenPayload.STREAM_CODEC,
             new DirectionalPayloadHandler<>(PanelOpenPayload::handleClient, PanelOpenPayload::handleServer));
+        registrar.playToServer(AutoCollectPayload.TYPE, AutoCollectPayload.STREAM_CODEC, AutoCollectPayload::handleServer);
     }
 
     /** Push the player's current unlocked-slot count to their client. */
