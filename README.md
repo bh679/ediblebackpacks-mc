@@ -30,6 +30,7 @@ storage by one slot.**
 |---|---|---|
 | `resetOnDeath` | `DEFAULT` | `DEFAULT` = follow host mod (standalone: persist) · `ON` = slots reset + contents drop on death · `OFF` = always persist |
 | `maxSlots` | `108` | Cap on slots unlockable by eating backpacks (render cap 108) |
+| `autoCollect` | `true` | Items picked up off the ground go into the backpack: matching backpack stacks are topped up first, and whatever the inventory can't hold fills empty backpack slots. Never while the panels are closed. |
 
 ## Development
 

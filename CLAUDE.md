@@ -98,6 +98,14 @@ At the slot cap `use()` still refuses, so the food is never eaten for nothing.
   half, and `client/BackpackKeyBindings` the keyboard one — an unbound-by-default mapping,
   handled both on client tick (in-world) and on `ScreenEvent.KeyPressed.Pre` (vanilla stops
   ticking key mappings while a screen is open).
+- Ground pickups — `mixin/ItemEntityMixin` `@WrapOperation`s the single `Inventory.add` call in
+  `ItemEntity.playerTouch` and routes it through `storage/BackpackPickup`: top up matching
+  backpack stacks (even with inventory room), then vanilla's add, then empty backpack slots.
+  Wrapping just that call keeps vanilla's delay/owner checks, NeoForge pickup events, take
+  animation, stats and discard; an event can't do it, because `Inventory.add` returns false on
+  a full inventory and vanilla then skips the whole pickup. Unlocked slots only, nothing while
+  the panels are closed, SERVER config `autoCollect` (default on). `BackpackPickupTest` drives
+  a real `playerTouch` on the ephemeral server.
 - `network/SlotCountPayload` — server→client unlocked-count sync (attachments don't
   auto-sync). Sent on login/respawn/dimension-change/eat (`event/BackpackEvents`).
 - Death policy — `storage/BackpackPolicy.shouldResetOnDeath(configMode, hostDefault)`.
