@@ -22,6 +22,7 @@ public final class EBConfig {
     public static final ModConfigSpec SPEC;
     public static final ModConfigSpec.EnumValue<ResetMode> RESET_ON_DEATH;
     public static final ModConfigSpec.IntValue MAX_SLOTS;
+    public static final ModConfigSpec.BooleanValue AUTO_COLLECT;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -39,6 +40,13 @@ public final class EBConfig {
                 + BackpackLayout.MAX_SLOTS + ").")
             .defineInRange("maxSlots", BackpackLayout.MAX_SLOTS, 0, BackpackLayout.MAX_SLOTS);
 
+        AUTO_COLLECT = builder
+            .comment(
+                "Whether items picked up off the ground go into the backpack.",
+                "Backpack stacks of the same item are topped up first; anything the inventory",
+                "cannot hold then fills empty backpack slots. Never while the panels are closed.")
+            .define("autoCollect", true);
+
         SPEC = builder.build();
     }
 
@@ -47,6 +55,10 @@ public final class EBConfig {
     /** Config-loaded guard: fall back to defaults before the spec loads. */
     public static int maxSlots() {
         return SPEC.isLoaded() ? MAX_SLOTS.get() : BackpackLayout.MAX_SLOTS;
+    }
+
+    public static boolean autoCollect() {
+        return !SPEC.isLoaded() || AUTO_COLLECT.get();
     }
 
     public static ResetMode resetMode() {
