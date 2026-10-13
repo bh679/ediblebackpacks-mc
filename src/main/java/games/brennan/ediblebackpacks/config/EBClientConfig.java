@@ -20,6 +20,7 @@ public final class EBClientConfig {
     public static final ModConfigSpec.EnumValue<ButtonAnchor> BUTTON_ANCHOR;
     public static final ModConfigSpec.IntValue BUTTON_X;
     public static final ModConfigSpec.IntValue BUTTON_Y;
+    public static final ModConfigSpec.EnumValue<AutoCollectMode> AUTO_COLLECT;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -53,6 +54,13 @@ public final class EBClientConfig {
                 + "(the inventory GUI is 166 tall; negative values sit above it).")
             .defineInRange("buttonY", ButtonPlacement.ABOVE_PANEL_Y, COORD_MIN, COORD_MAX);
 
+        AUTO_COLLECT = builder
+            .comment("When items you pick up go into your backpack.",
+                "OFF = never; WHILE_OPEN = only while the panels are open;",
+                "ALWAYS = even while the panels are closed.",
+                "A server can still turn collecting off for everyone (autoCollect in the server config).")
+            .defineEnum("autoCollect", AutoCollectMode.WHILE_OPEN);
+
         SPEC = builder.build();
     }
 
@@ -61,6 +69,10 @@ public final class EBClientConfig {
     /** Config-loaded guards: the screen can be built before the spec loads. */
     public static boolean buttonEnabled() {
         return !SPEC.isLoaded() || BUTTON_ENABLED.get();
+    }
+
+    public static AutoCollectMode autoCollect() {
+        return SPEC.isLoaded() ? AUTO_COLLECT.get() : AutoCollectMode.WHILE_OPEN;
     }
 
     public static ButtonAnchor buttonAnchor() {

@@ -1,5 +1,6 @@
 package games.brennan.ediblebackpacks;
 
+import games.brennan.ediblebackpacks.config.AutoCollectMode;
 import games.brennan.ediblebackpacks.menu.BackpackLayout;
 import games.brennan.ediblebackpacks.registry.ModAttachments;
 import games.brennan.ediblebackpacks.storage.BackpackData;
@@ -64,6 +65,7 @@ class BackpackPickupTest {
         for (int i = 0; i < BackpackLayout.MAX_SLOTS; i++) data.items().setStackInSlot(i, ItemStack.EMPTY);
         data.setUnlocked(unlocked);
         data.setPanelsOpen(true);
+        data.setAutoCollect(AutoCollectMode.WHILE_OPEN);
         return player;
     }
 
@@ -197,6 +199,61 @@ class BackpackPickupTest {
         assertEquals(10, inBackpack(p, Items.DIRT), "closed is a lock, top-up included");
         assertFalse(entity.isRemoved());
         assertEquals(10, entity.getItem().getCount());
+    }
+
+    @Test
+    void alwaysCollectsWhilePanelsAreClosed(MinecraftServer server) throws Exception {
+        ServerLevel level = level(server);
+        FakePlayer p = player(level, 3);
+        fillInventory(p.getInventory());
+        data(p).items().setStackInSlot(0, new ItemStack(Items.DIRT, 10));
+        data(p).setPanelsOpen(false);
+        data(p).setAutoCollect(AutoCollectMode.ALWAYS);
+
+        ItemEntity entity = pickUp(level, p, new ItemStack(Items.DIRT, 10));
+
+        assertEquals(20, inBackpack(p, Items.DIRT), "ALWAYS ignores the closed panels");
+        assertTrue(entity.isRemoved());
+    }
+
+    @Test
+    void offCollectsNothingEvenWithPanelsOpen(MinecraftServer server) throws Exception {
+        ServerLevel level = level(server);
+        FakePlayer p = player(level, 3);
+        data(p).items().setStackInSlot(0, new ItemStack(Items.DIRT, 10));
+        data(p).setAutoCollect(AutoCollectMode.OFF);
+
+        ItemEntity entity = pickUp(level, p, new ItemStack(Items.DIRT, 5));
+
+        assertEquals(10, inBackpack(p, Items.DIRT), "no top-up when OFF");
+        assertEquals(5, inInventory(p, Items.DIRT), "vanilla pickup still happens");
+        assertTrue(entity.isRemoved());
+    }
+
+    @Test
+    void modeTable() {
+        assertFalse(AutoCollectMode.OFF.collects(true));
+        assertFalse(AutoCollectMode.OFF.collects(false));
+        assertTrue(AutoCollectMode.WHILE_OPEN.collects(true));
+        assertFalse(AutoCollectMode.WHILE_OPEN.collects(false));
+        assertTrue(AutoCollectMode.ALWAYS.collects(true));
+        assertTrue(AutoCollectMode.ALWAYS.collects(false));
+    }
+
+    @Test
+    void modeSurvivesNbtAndOldSavesKeepWhileOpen(MinecraftServer server) {
+        BackpackData saved = new BackpackData();
+        saved.setAutoCollect(AutoCollectMode.ALWAYS);
+        BackpackData loaded = new BackpackData();
+        loaded.deserializeNBT(server.registryAccess(), saved.serializeNBT(server.registryAccess()));
+        assertEquals(AutoCollectMode.ALWAYS, loaded.autoCollect());
+
+        net.minecraft.nbt.CompoundTag old = saved.serializeNBT(server.registryAccess());
+        old.remove("autoCollect");
+        BackpackData fromOld = new BackpackData();
+        fromOld.setAutoCollect(AutoCollectMode.OFF);
+        fromOld.deserializeNBT(server.registryAccess(), old);
+        assertEquals(AutoCollectMode.WHILE_OPEN, fromOld.autoCollect());
     }
 
     @Test

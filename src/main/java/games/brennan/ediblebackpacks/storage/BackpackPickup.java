@@ -16,8 +16,11 @@ import net.neoforged.neoforge.items.IItemHandler;
  *   <li>whatever is still left goes into empty backpack slots.</li>
  * </ol>
  *
- * <p>Only unlocked slots take part, and nothing is collected while the panels are closed —
- * closed is a lock, exactly as {@code menu/BackpackSlot} enforces for clicks.</p>
+ * <p>Only unlocked slots take part. When it runs is the player's own
+ * {@link games.brennan.ediblebackpacks.config.AutoCollectMode}: by default nothing is
+ * collected while the panels are closed — closed is a lock, as {@code menu/BackpackSlot}
+ * enforces for clicks — but a player who picks ALWAYS has asked for pickups into slots they
+ * can't see. The server's {@link EBConfig#autoCollect()} turns it all off.</p>
  *
  * <p>Every step shrinks the passed stack in place, the same contract {@code Inventory.add}
  * follows, so vanilla's {@code playerTouch} reads the picked-up count off the item entity's
@@ -42,7 +45,7 @@ public final class BackpackPickup {
     }
 
     private static boolean accepts(BackpackData data) {
-        return EBConfig.autoCollect() && data.panelsOpen() && data.unlocked() > 0;
+        return EBConfig.autoCollect() && data.autoCollect().collects(data.panelsOpen()) && data.unlocked() > 0;
     }
 
     /** Merge {@code stack} into the first {@code unlocked} slots that already hold the same item. */
