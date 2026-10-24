@@ -1,0 +1,10 @@
+{
+  "item.ediblebackpacks.edible_backpack": "可食用背包",
+  "item.ediblebackpacks.golden_edible_backpack": "金质可食用背包",
+  "ediblebackpacks.msg.slots": "背包容量：%s",
+  "ediblebackpacks.msg.full": "背包容量已达上限",
+  "ediblebackpacks.button.open": "打开背包",
+  "ediblebackpacks.button.close": "关闭背包",
+  "key.categories.ediblebackpacks": "可食用背包",
+  "key.ediblebackpacks.toggle_panels": "打开／关闭背包"
+}
