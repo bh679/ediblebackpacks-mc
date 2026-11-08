@@ -13,7 +13,9 @@ import net.minecraft.world.item.ItemStack;
  *
  * <p>The backpack behaves like an open container that is always on screen:</p>
  * <ul>
- *   <li>backpack → main inventory, then hotbar (vanilla's own 9..45 destination);</li>
+ *   <li>backpack → the matching armour or offhand slot when it is empty (as a
+ *       shift-click from the inventory does), otherwise main inventory, then
+ *       hotbar (vanilla's own 9..45 destination);</li>
  *   <li>main inventory / hotbar → vanilla's hotbar↔inventory shuffle FIRST, with
  *       whatever does not fit there overflowing into the backpack. Armour and
  *       offhand items still auto-equip ahead of both, exactly as they do without
@@ -79,7 +81,12 @@ public final class BackpackQuickMove {
         boolean moved;
 
         if (index >= start) {
-            moved = mover.move(inSlot, INV_START, INV_END, false);
+            // Wear it when the matching slot is empty, like a shift-click from the inventory.
+            // An occupied slot is never swapped out; a refusal (binding curse) falls through.
+            // Safe from the INV_END duplication: the source is a panel slot, outside equip..equip+1.
+            int equip = equipTarget(slots, player, original);
+            moved = equip >= 0 && mover.move(inSlot, equip, equip + 1, false);
+            if (!inSlot.isEmpty()) moved |= mover.move(inSlot, INV_START, INV_END, false);
         } else if (index < INV_START || index == OFFHAND) {
             moved = mover.move(inSlot, INV_START, INV_END, index == 0);
             // Crafting result only: the offhand is a last resort the player can always SEE,
@@ -121,12 +128,21 @@ public final class BackpackQuickMove {
      * inventory; keep that priority ahead of the backpack.
      */
     private static boolean equipPreferred(List<Slot> slots, Player player, ItemStack stack) {
+        return equipTarget(slots, player, stack) >= 0;
+    }
+
+    /**
+     * Menu index of the empty armour/offhand slot this stack would equip into, or -1 when it
+     * isn't equippable there or that slot is already occupied.
+     */
+    private static int equipTarget(List<Slot> slots, Player player, ItemStack stack) {
         EquipmentSlot equipment = player.getEquipmentSlotForItem(stack);
-        return switch (equipment) {
-            case HEAD, CHEST, LEGS, FEET -> !slots.get(8 - equipment.getIndex()).hasItem();
-            case OFFHAND -> !slots.get(OFFHAND).hasItem();
-            default -> false;
+        int target = switch (equipment) {
+            case HEAD, CHEST, LEGS, FEET -> 8 - equipment.getIndex();
+            case OFFHAND -> OFFHAND;
+            default -> -1;
         };
+        return target >= 0 && !slots.get(target).hasItem() ? target : -1;
     }
 
     /**
