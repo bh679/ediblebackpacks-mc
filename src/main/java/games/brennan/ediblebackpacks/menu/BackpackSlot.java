@@ -63,6 +63,11 @@ public final class BackpackSlot extends SlotItemHandler {
         return owner.getData(ModAttachments.BACKPACK).items();
     }
 
+    /** The player whose backpack this slot shows. */
+    public Player owner() {
+        return owner;
+    }
+
     /** This slot's index into the backpack, which is also its place in the fill order. */
     public int backpackIndex() {
         return backpackIndex;
