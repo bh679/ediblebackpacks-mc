@@ -1,5 +1,6 @@
 package games.brennan.ediblebackpacks.mixin;
 
+import games.brennan.ediblebackpacks.EdibleBackpacksApi;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import games.brennan.ediblebackpacks.registry.ModAttachments;
@@ -26,6 +27,8 @@ public abstract class ItemEntityMixin {
             at = @At(value = "INVOKE",
                      target = "Lnet/minecraft/world/entity/player/Inventory;add(Lnet/minecraft/world/item/ItemStack;)Z"))
     private boolean ediblebackpacks$collectIntoBackpack(Inventory inventory, ItemStack stack, Operation<Boolean> original) {
+        // A host-locked backpack (EdibleBackpacksApi#setAccessLock) takes no pickups: vanilla decides alone.
+        if (EdibleBackpacksApi.isAccessLocked(inventory.player)) return original.call(inventory, stack);
         return BackpackPickup.collect(
             inventory.player.getData(ModAttachments.BACKPACK), stack, s -> original.call(inventory, s));
     }

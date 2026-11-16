@@ -1,5 +1,6 @@
 package games.brennan.ediblebackpacks.menu;
 
+import games.brennan.ediblebackpacks.EdibleBackpacksApi;
 import games.brennan.ediblebackpacks.client.BackpackPanelLayout;
 import games.brennan.ediblebackpacks.mixin.SlotAccessor;
 import games.brennan.ediblebackpacks.registry.ModAttachments;
@@ -80,6 +81,11 @@ public final class BackpackSlot extends SlotItemHandler {
         return unlockedNow() && owner.getData(ModAttachments.BACKPACK).panelsOpen();
     }
 
+    /** Usable and not locked by the host mod ({@link EdibleBackpacksApi#isAccessLocked}). Locked slots still show. */
+    private boolean interactableNow() {
+        return usableNow() && !EdibleBackpacksApi.isAccessLocked(owner);
+    }
+
     @Override
     public boolean isActive() {
         if (!usableNow()) return false;
@@ -98,12 +104,12 @@ public final class BackpackSlot extends SlotItemHandler {
 
     @Override
     public boolean mayPlace(ItemStack stack) {
-        return usableNow() && !stack.isEmpty() && getItemHandler().isItemValid(backpackIndex, stack);
+        return interactableNow() && !stack.isEmpty() && getItemHandler().isItemValid(backpackIndex, stack);
     }
 
     @Override
     public boolean mayPickup(Player player) {
-        return usableNow() && super.mayPickup(player);
+        return interactableNow() && super.mayPickup(player);
     }
 
     @Override
