@@ -10,6 +10,7 @@ import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -148,6 +149,29 @@ class InventoryMenuQuickMoveTest {
     }
 
     // --- tests -------------------------------------------------------------
+
+    @Test
+    void aHostLockedBackpackTakesNothingAndGivesNothing(MinecraftServer server) throws Exception {
+        FakePlayer p = player(level(server), 4);
+        p.getData(ModAttachments.BACKPACK).items().setStackInSlot(0, new ItemStack(Items.DIRT, 8));
+        p.getInventory().setItem(20, new ItemStack(Items.COBBLESTONE, 16));
+        fillHotbar(p.getInventory());
+        Slot full = p.inventoryMenu.getSlot(BackpackQuickMoveHelper.FIRST_BACKPACK);
+        Slot empty = p.inventoryMenu.getSlot(BackpackQuickMoveHelper.FIRST_BACKPACK + 1);
+        try {
+            EdibleBackpacksApi.setAccessLock(player -> player == p);
+            assertFalse(full.mayPickup(p), "nothing comes out of a locked backpack");
+            assertFalse(empty.mayPlace(new ItemStack(Items.BREAD)), "nothing goes in");
+            assertTrue(full.isActive(), "locked slots still show");
+            // Shift-click from the main inventory with the hotbar full: the backpack must not take it.
+            p.inventoryMenu.clicked(20, 0, ClickType.QUICK_MOVE, p);
+            assertEquals(0, inBackpack(p, Items.COBBLESTONE), "shift-click must not fill a locked backpack");
+            assertEquals(8, inBackpack(p, Items.DIRT), "the backpack's own items stay put");
+        } finally {
+            EdibleBackpacksApi.setAccessLock(null);
+        }
+        assertTrue(full.mayPickup(p) && empty.mayPlace(new ItemStack(Items.BREAD)), "unlocked again once the host lets go");
+    }
 
     @Test
     void mixinAppendsAllBackpackSlots(MinecraftServer server) throws Exception {

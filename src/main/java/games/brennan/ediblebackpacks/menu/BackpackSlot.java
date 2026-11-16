@@ -1,5 +1,6 @@
 package games.brennan.ediblebackpacks.menu;
 
+import games.brennan.ediblebackpacks.EdibleBackpacksApi;
 import games.brennan.ediblebackpacks.client.BackpackPanelLayout;
 import games.brennan.ediblebackpacks.mixin.SlotAccessor;
 import games.brennan.ediblebackpacks.registry.ModAttachments;
@@ -62,6 +63,11 @@ public final class BackpackSlot extends SlotItemHandler {
         return owner.getData(ModAttachments.BACKPACK).items();
     }
 
+    /** The player whose backpack this slot shows. */
+    public Player owner() {
+        return owner;
+    }
+
     /** This slot's index into the backpack, which is also its place in the fill order. */
     public int backpackIndex() {
         return backpackIndex;
@@ -78,6 +84,11 @@ public final class BackpackSlot extends SlotItemHandler {
      */
     private boolean usableNow() {
         return unlockedNow() && owner.getData(ModAttachments.BACKPACK).panelsOpen();
+    }
+
+    /** Usable and not locked by the host mod ({@link EdibleBackpacksApi#isAccessLocked}). Locked slots still show. */
+    private boolean interactableNow() {
+        return usableNow() && !EdibleBackpacksApi.isAccessLocked(owner);
     }
 
     @Override
@@ -98,12 +109,12 @@ public final class BackpackSlot extends SlotItemHandler {
 
     @Override
     public boolean mayPlace(ItemStack stack) {
-        return usableNow() && !stack.isEmpty() && getItemHandler().isItemValid(backpackIndex, stack);
+        return interactableNow() && !stack.isEmpty() && getItemHandler().isItemValid(backpackIndex, stack);
     }
 
     @Override
     public boolean mayPickup(Player player) {
-        return usableNow() && super.mayPickup(player);
+        return interactableNow() && super.mayPickup(player);
     }
 
     @Override
