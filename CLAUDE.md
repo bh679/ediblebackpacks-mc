@@ -2,9 +2,11 @@
 
 NeoForge 1.21.1 mod (`bh679/ediblebackpacks-mc`, pkg `games.brennan.ediblebackpacks`).
 Eat an `edible_backpack` item → +1 persistent backpack slot (cap 108), shown as two
-6×9 panels flanking the survival inventory screen and every chest-shaped screen (chests,
-trapped chests, ender chests, barrels, shulker boxes) — they are all 176 wide, so one set
-of layout math places the panels on all of them. Slots unlock **down a column, then
+6×9 panels flanking the survival inventory screen, every chest-shaped screen (chests,
+trapped chests, ender chests, barrels, shulker boxes) and the villager / wandering-trader
+trade screen. The left panel hangs off the GUI's left edge and the right one off its right
+edge, so the layout math only needs the GUI's width (`getXSize()`: 176, or 276 for trading;
+`BackpackLayout.slotX(index, bookMode, guiWidth)`). Slots unlock **down a column, then
 across**, starting on the column closest to the player's inventory and growing outward
 (`menu/BackpackLayout`).
 
@@ -67,6 +69,15 @@ At the slot cap `use()` still refuses, so the food is never eaten for nothing.
   inventory still lands somewhere visible. That extra call is safe where `INV_END` is
   not: the duplication `INV_END` guards against needs the source slot inside the
   destination range, and the result slot is 0.
+- `mixin/MerchantMenuMixin` + `menu/MerchantQuickMove` + `menu/MerchantPayment` — the trade
+  screen. Unlike the chest mixins vanilla's quick-move is NOT replaced (its result-slot take
+  completes the trade, and Dungeon Train HEAD-injects the same method for its extra-cost grid):
+  a HEAD inject handles clicks on panel slots only (→ inventory), a RETURN inject moves what
+  vanilla left in a payment/inventory slot into the backpack. Picking a trade (`tryMoveItems`
+  RETURN) tops the payment slots up from the backpack after vanilla filled them from the
+  inventory, only from slots `mayPickup` allows (closed/locked/host-locked backpack never pays).
+  Never index past slot 38 by number: Dungeon Train appends its extra-cost slots to the same
+  menu, and mixin order decides whose slots come first.
 - `menu/ContainerQuickMove` — the same job for the chest-shaped menus, parameterised by the
   container's size: container → inventory, inventory → container, backpack → container, each
   overflowing into the next place the player can see. Intercepting is mandatory, not cosmetic —
