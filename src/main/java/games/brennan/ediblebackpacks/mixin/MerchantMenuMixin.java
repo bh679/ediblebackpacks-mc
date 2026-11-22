@@ -3,6 +3,7 @@ package games.brennan.ediblebackpacks.mixin;
 import games.brennan.ediblebackpacks.menu.BackpackSlotAppender;
 import games.brennan.ediblebackpacks.menu.MerchantPayment;
 import games.brennan.ediblebackpacks.menu.MerchantQuickMove;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MerchantContainer;
@@ -52,8 +53,10 @@ public abstract class MerchantMenuMixin {
     }
 
     /**
-     * Whatever vanilla left in a payment or inventory slot goes into the backpack. Not reached
-     * when an earlier HEAD inject (Dungeon Train's extra-cost grid) already handled the click.
+     * Whatever vanilla left in a payment or inventory slot goes into the backpack. When another
+     * mod's HEAD inject on this method cancels (Dungeon Train's extra-cost grid does, for a stack
+     * it routed), whether this still runs depends on mixin order: if it does, the slot it looks
+     * at is already empty or holds only what that inject left, so it can only add, never undo.
      */
     @Inject(method = "quickMoveStack", at = @At("RETURN"), cancellable = true)
     private void ediblebackpacks$overflowIntoBackpack(Player player, int index, CallbackInfoReturnable<ItemStack> cir) {
@@ -62,6 +65,15 @@ public abstract class MerchantMenuMixin {
         ItemStack moved = MerchantQuickMove.overflowIntoBackpack(
             self.slots, accessor::ediblebackpacks$invokeMoveItemStackTo, index);
         if (moved != null && cir.getReturnValue().isEmpty()) cir.setReturnValue(moved);
+    }
+
+    /** See {@link MerchantQuickMove#returnPayment}. */
+    @Inject(method = "removed", at = @At("HEAD"))
+    private void ediblebackpacks$returnPayment(Player player, CallbackInfo ci) {
+        if (!(player instanceof ServerPlayer sp) || !sp.isAlive() || sp.hasDisconnected()) return;
+        AbstractContainerMenuAccessor accessor = (AbstractContainerMenuAccessor) this;
+        MerchantQuickMove.returnPayment(((MerchantMenu) (Object) this).slots,
+            accessor::ediblebackpacks$invokeMoveItemStackTo);
     }
 
     /** Picking a trade: vanilla fills the payment from the inventory, the backpack tops it up. */

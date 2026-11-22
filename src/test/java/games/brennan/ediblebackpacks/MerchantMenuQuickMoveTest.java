@@ -228,4 +228,17 @@ class MerchantMenuQuickMoveTest {
         assertEquals(0, inBackpack(p, Items.EMERALD));
         assertEquals(7, inInventory(p, Items.EMERALD));
     }
+
+    @Test
+    void closingWithAFullInventoryReturnsPaymentToTheBackpack(MinecraftServer server) throws Exception {
+        FakePlayer p = player(level(server), BackpackLayout.MAX_SLOTS);
+        backpack(p, 0, new ItemStack(Items.EMERALD, 20));
+        MerchantMenu menu = menu(p, false);
+        menu.tryMoveItems(0);
+        for (int i = 0; i < 36; i++) p.getInventory().setItem(i, new ItemStack(Items.COBBLESTONE, 64));
+        menu.removed(p);
+
+        assertEquals(20, inBackpack(p, Items.EMERALD), "nothing dropped on the floor");
+        assertTrue(menu.getSlot(0).getItem().isEmpty());
+    }
 }

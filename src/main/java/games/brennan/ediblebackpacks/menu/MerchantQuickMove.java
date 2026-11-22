@@ -80,4 +80,25 @@ public final class MerchantQuickMove {
         moved.setCount(before - inSlot.getCount());
         return moved.isEmpty() ? null : moved;
     }
+
+    /**
+     * Closing the trade screen: vanilla hands the payment back with
+     * {@code placeItemBackInInventory}, which drops whatever does not fit. Payment can now come
+     * out of the backpack, so a player with a full inventory could close the screen and watch
+     * their emeralds hit the floor. Send it to the inventory first, then the backpack; anything
+     * left is vanilla's to place or drop as before. Server side, living connected players only,
+     * matching vanilla's own branch.
+     */
+    public static void returnPayment(List<Slot> slots, BackpackQuickMove.StackMover mover) {
+        int start = BackpackQuickMove.backpackStart(slots);
+        if (start < INV_END) return;
+        for (int i = 0; i < RESULT; i++) {
+            Slot slot = slots.get(i);
+            if (!slot.hasItem()) continue;
+            ItemStack stack = slot.getItem();
+            mover.move(stack, INV_START, INV_END, false);
+            if (!stack.isEmpty()) mover.move(stack, start, start + BackpackLayout.MAX_SLOTS, false);
+            slot.set(stack.isEmpty() ? ItemStack.EMPTY : stack);
+        }
+    }
 }
