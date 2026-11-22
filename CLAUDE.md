@@ -73,7 +73,10 @@ At the slot cap `use()` still refuses, so the food is never eaten for nothing.
   screen. Unlike the chest mixins vanilla's quick-move is NOT replaced (its result-slot take
   completes the trade, and Dungeon Train HEAD-injects the same method for its extra-cost grid):
   a HEAD inject handles clicks on panel slots only (→ inventory), a RETURN inject moves what
-  vanilla left in a payment/inventory slot into the backpack. Picking a trade (`tryMoveItems`
+  vanilla left in a payment/inventory slot into the backpack. The result slot's own
+  `moveItemStackTo(3, 39, true)` (ordinal 0) is WRAPPED, not split (a second pass would fire the
+  trade twice): `MerchantQuickMove#moveResult` tops up inventory stacks, then backpack stacks,
+  then vanilla, then empty backpack slots. Picking a trade (`tryMoveItems`
   RETURN) tops the payment slots up from the backpack after vanilla filled them from the
   inventory, only from slots `mayPickup` allows (closed/locked/host-locked backpack never pays).
   Never index past slot 38 by number: Dungeon Train appends its extra-cost slots to the same

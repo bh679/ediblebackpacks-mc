@@ -13,7 +13,8 @@ storage by one slot.**
   barrels, shulker boxes and the villager trade screen. With the recipe book open they
   move to the right of the window.
 - When trading, picking a trade takes its price from your inventory first, then from your
-  backpack. Shift-clicking moves items between the backpack and your inventory.
+  backpack. Shift-clicking moves items between the backpack and your inventory, and a
+  shift-clicked trade result joins a matching stack in your backpack.
 - Contents and unlocked slots persist through death **by default**. Servers can set
   `resetOnDeath = ON` in `serverconfig/ediblebackpacks-server.toml`, and host mods that
   bundle this mod (e.g. Dungeon Train) can steer the `DEFAULT` policy via

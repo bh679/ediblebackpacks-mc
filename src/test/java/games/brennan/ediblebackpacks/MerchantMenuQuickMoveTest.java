@@ -241,4 +241,91 @@ class MerchantMenuQuickMoveTest {
         assertEquals(20, inBackpack(p, Items.EMERALD), "nothing dropped on the floor");
         assertTrue(menu.getSlot(0).getItem().isEmpty());
     }
+
+    // --- the trade result --------------------------------------------------
+
+    /** 1 dirt for 3 emeralds: a sale. */
+    private static MerchantMenu saleMenu(FakePlayer p) {
+        // Reports client side so vanilla's trade sound (which casts the trader to an entity) stays quiet.
+        ClientSideMerchant merchant = new ClientSideMerchant(p) {
+            @Override public boolean isClientSide() { return true; }
+        };
+        MerchantOffers offers = new MerchantOffers();
+        offers.add(new MerchantOffer(new ItemCost(Items.DIRT, 1), Optional.empty(),
+            new ItemStack(Items.EMERALD, 3), 12, 1, 0.05f));
+        merchant.overrideOffers(offers);
+        MerchantMenu menu = new MerchantMenu(1, p.getInventory(), merchant);
+        menu.getSlot(0).set(new ItemStack(Items.DIRT, 1));
+        return menu;
+    }
+
+    @Test
+    void aSaleJoinsTheStackInTheBackpack(MinecraftServer server) throws Exception {
+        FakePlayer p = player(level(server), BackpackLayout.MAX_SLOTS);
+        backpack(p, 5, new ItemStack(Items.EMERALD, 10));
+        MerchantMenu menu = saleMenu(p);
+        assertTrue(menu.getSlot(2).getItem().is(Items.EMERALD), "the sale is ready to take");
+        shiftClick(menu, p, 2);
+
+        assertEquals(13, inBackpack(p, Items.EMERALD), "joined the backpack stack");
+        assertEquals(0, inInventory(p, Items.EMERALD), "no new inventory stack");
+        assertEquals(13, p.getData(ModAttachments.BACKPACK).items().getStackInSlot(5).getCount());
+        assertTrue(menu.getSlot(0).getItem().isEmpty(), "exactly one trade's payment taken");
+    }
+
+    @Test
+    void anInventoryStackOfTheSaleStillFillsFirst(MinecraftServer server) throws Exception {
+        FakePlayer p = player(level(server), BackpackLayout.MAX_SLOTS);
+        p.getInventory().setItem(9, new ItemStack(Items.EMERALD, 10));
+        backpack(p, 0, new ItemStack(Items.EMERALD, 10));
+        MerchantMenu menu = saleMenu(p);
+        shiftClick(menu, p, 2);
+
+        assertEquals(13, inInventory(p, Items.EMERALD));
+        assertEquals(10, inBackpack(p, Items.EMERALD));
+    }
+
+    @Test
+    void aSaleWithNoStackAnywhereGoesToTheInventoryAsVanilla(MinecraftServer server) throws Exception {
+        FakePlayer p = player(level(server), BackpackLayout.MAX_SLOTS);
+        MerchantMenu menu = saleMenu(p);
+        shiftClick(menu, p, 2);
+
+        assertEquals(3, inInventory(p, Items.EMERALD));
+        assertEquals(0, inBackpack(p, Items.EMERALD));
+    }
+
+    @Test
+    void aSaleWithAFullInventoryLandsInTheBackpack(MinecraftServer server) throws Exception {
+        FakePlayer p = player(level(server), BackpackLayout.MAX_SLOTS);
+        for (int i = 0; i < 36; i++) p.getInventory().setItem(i, new ItemStack(Items.COBBLESTONE, 64));
+        MerchantMenu menu = saleMenu(p);
+        shiftClick(menu, p, 2);
+
+        assertEquals(3, inBackpack(p, Items.EMERALD));
+        assertTrue(menu.getSlot(0).getItem().isEmpty(), "the trade went through");
+    }
+
+    @Test
+    void aClosedBackpackTakesNoSale(MinecraftServer server) throws Exception {
+        FakePlayer p = player(level(server), BackpackLayout.MAX_SLOTS);
+        p.getData(ModAttachments.BACKPACK).setPanelsOpen(false);
+        backpack(p, 0, new ItemStack(Items.EMERALD, 10));
+        MerchantMenu menu = saleMenu(p);
+        shiftClick(menu, p, 2);
+
+        assertEquals(3, inInventory(p, Items.EMERALD));
+        assertEquals(10, inBackpack(p, Items.EMERALD));
+    }
+
+    @Test
+    void aLockedSlotsStackTakesNoSale(MinecraftServer server) throws Exception {
+        FakePlayer p = player(level(server), 1);
+        backpack(p, 1, new ItemStack(Items.EMERALD, 10));
+        MerchantMenu menu = saleMenu(p);
+        shiftClick(menu, p, 2);
+
+        assertEquals(3, inInventory(p, Items.EMERALD));
+        assertEquals(10, inBackpack(p, Items.EMERALD));
+    }
 }
