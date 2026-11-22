@@ -66,13 +66,28 @@ public final class BackpackLayout {
      * live is what let quick-moved items land where the player could not see them.</p>
      */
     public static int slotX(int index, boolean bookMode) {
+        return slotX(index, bookMode, GUI_WIDTH);
+    }
+
+    /**
+     * {@link #slotX(int, boolean)} for a GUI {@code guiWidth} wide. The left panel hangs off the
+     * GUI's left edge, so only the right panel moves with the width: the villager trade screen
+     * is 276 wide, and its right panel starts 8px past that edge instead of past 176.
+     */
+    public static int slotX(int index, boolean bookMode, int guiWidth) {
         int col = columnOf(index);
+        int rightInner = rightInnerX(guiWidth);
         if (bookMode) {
-            return RIGHT_INNER_X + (isRightPanel(index) ? COLS + col : col) * SLOT;
+            return rightInner + (isRightPanel(index) ? COLS + col : col) * SLOT;
         }
         return isRightPanel(index)
-            ? RIGHT_INNER_X + col * SLOT     // right panel grows rightward
+            ? rightInner + col * SLOT        // right panel grows rightward
             : LEFT_INNER_X - col * SLOT;     // left panel grows leftward
+    }
+
+    /** Right panel's innermost column x on a GUI {@code guiWidth} wide. */
+    public static int rightInnerX(int guiWidth) {
+        return guiWidth + GAP;
     }
 
     /**
@@ -81,6 +96,11 @@ public final class BackpackLayout {
      * Falls back to the GUI's own right edge when nothing sits on that side.
      */
     public static int rightExtent(int unlocked, boolean bookMode) {
+        return rightExtent(unlocked, bookMode, GUI_WIDTH);
+    }
+
+    /** {@link #rightExtent(int, boolean)} for a GUI {@code guiWidth} wide. */
+    public static int rightExtent(int unlocked, boolean bookMode, int guiWidth) {
         int rightCols = columnsFor(unlockedOnPanel(unlocked, true));
         int cols;
         if (!bookMode) {
@@ -90,7 +110,7 @@ public final class BackpackLayout {
         } else {
             cols = columnsFor(unlockedOnPanel(unlocked, false));
         }
-        return cols == 0 ? GUI_WIDTH : RIGHT_INNER_X + cols * SLOT + BORDER;
+        return cols == 0 ? guiWidth : rightInnerX(guiWidth) + cols * SLOT + BORDER;
     }
 
     /** Slot y relative to the screen's topPos. */

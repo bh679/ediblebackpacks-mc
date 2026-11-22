@@ -21,8 +21,9 @@ import java.util.List;
 
 /**
  * Draws the two backpack panel backgrounds behind the appended slots — on the survival
- * {@link InventoryScreen} and on every chest-shaped screen the panels were added to (they are
- * all 176 wide, so the same layout math places them). Slot items/highlights are rendered by the
+ * {@link InventoryScreen}, on every chest-shaped screen and on the villager trade screen. The
+ * left panel hangs off the GUI's left edge and the right one off its right edge, so the layout
+ * math only needs the GUI's width ({@code getXSize()}: 176, or 276 for trading). Slot items/highlights are rendered by the
  * vanilla screen loop (the slots live in the menu); only the chrome is drawn here.
  *
  * <p>Which screens those are is asked of the MENU, not the screen class: if the menu carries
@@ -83,8 +84,8 @@ public final class BackpackScreenPanels {
         int top = screen.getGuiTop();
         boolean bookMode = mode == BackpackPanelLayout.Mode.BOOK;
 
-        drawPanel(g, left, top, unlocked, false, bookMode);
-        drawPanel(g, left, top, unlocked, true, bookMode);
+        drawPanel(g, left, top, screen.getXSize(), unlocked, false, bookMode);
+        drawPanel(g, left, top, screen.getXSize(), unlocked, true, bookMode);
     }
 
     /**
@@ -121,7 +122,8 @@ public final class BackpackScreenPanels {
         if (button == null) return;
         ButtonPlacement.Pos pos = ButtonPlacement.resolve(
             EBClientConfig.buttonAnchor(), EBClientConfig.buttonX(), EBClientConfig.buttonY(),
-            !(screen instanceof InventoryScreen), ButtonPlacement.roomAbove(screen.getGuiTop()));
+            !(screen instanceof InventoryScreen), ButtonPlacement.roomAbove(screen.getGuiTop()),
+            screen.getXSize());
         button.setPosition(screen.getGuiLeft() + pos.x(), screen.getGuiTop() + pos.y());
         button.visible = unlocked > 0;
         button.active = unlocked > 0;
@@ -136,13 +138,13 @@ public final class BackpackScreenPanels {
         return screen != null && BackpackQuickMove.backpackStart(screen.getMenu().slots) >= 0;
     }
 
-    private static void drawPanel(GuiGraphics g, int guiLeft, int guiTop, int unlocked,
+    private static void drawPanel(GuiGraphics g, int guiLeft, int guiTop, int guiWidth, int unlocked,
                                   boolean right, boolean bookMode) {
         int slots = BackpackLayout.unlockedOnPanel(unlocked, right);
         if (slots <= 0) return;
 
         int base = right ? BackpackLayout.PANEL_SLOTS : 0;
-        List<Block> blocks = silhouette(guiLeft, guiTop, base, slots, right, bookMode);
+        List<Block> blocks = silhouette(guiLeft, guiTop, guiWidth, base, slots, right, bookMode);
 
         // One pass per chrome layer, not per block: a block's FACE has to paint
         // over its neighbour's inner border, which has not been drawn yet if the
@@ -155,7 +157,7 @@ public final class BackpackScreenPanels {
         // Slot insets — recessed, so their bevel is the panel's inverted:
         // shadow on the top-left, highlight on the bottom-right.
         for (int i = 0; i < slots; i++) {
-            int sx = guiLeft + BackpackLayout.slotX(base + i, bookMode);
+            int sx = guiLeft + BackpackLayout.slotX(base + i, bookMode, guiWidth);
             int sy = guiTop + BackpackLayout.slotY(base + i);
             g.fill(sx - 1, sy - 1, sx + 17, sy + 17, SHADE);
             g.fill(sx, sy, sx + 18, sy + 18, LIGHT);
@@ -173,30 +175,30 @@ public final class BackpackScreenPanels {
      * column outside it. Only corners on the silhouette's outside are rounded —
      * where the two blocks meet, the edges are interior and stay square.
      */
-    private static List<Block> silhouette(int guiLeft, int guiTop, int base, int slots, boolean right,
-                                          boolean bookMode) {
+    private static List<Block> silhouette(int guiLeft, int guiTop, int guiWidth, int base, int slots,
+                                          boolean right, boolean bookMode) {
         int fullCols = slots / BackpackLayout.ROWS;
         int rem = slots % BackpackLayout.ROWS;
         List<Block> blocks = new ArrayList<>(2);
         if (fullCols > 0) {
             // The short column, if any, covers this block's outward TOP corner but
             // never its bottom — that one stays exposed at the step.
-            blocks.add(block(guiLeft, guiTop, base, 0, fullCols, BackpackLayout.ROWS, right, bookMode,
+            blocks.add(block(guiLeft, guiTop, guiWidth, base, 0, fullCols, BackpackLayout.ROWS, right, bookMode,
                              true, true, rem == 0, true));
         }
         if (rem > 0) {
-            blocks.add(block(guiLeft, guiTop, base, fullCols, 1, rem, right, bookMode,
+            blocks.add(block(guiLeft, guiTop, guiWidth, base, fullCols, 1, rem, right, bookMode,
                              fullCols == 0, fullCols == 0, true, true));
         }
         return blocks;
     }
 
     /** Chrome rect around {@code cols} columns of {@code rows} slots, starting at fill-column {@code col0}. */
-    private static Block block(int guiLeft, int guiTop, int base, int col0, int cols, int rows,
+    private static Block block(int guiLeft, int guiTop, int guiWidth, int base, int col0, int cols, int rows,
                                boolean right, boolean bookMode,
                                boolean innerTop, boolean innerBottom, boolean outerTop, boolean outerBottom) {
-        int xa = guiLeft + BackpackLayout.slotX(base + col0 * BackpackLayout.ROWS, bookMode);
-        int xb = guiLeft + BackpackLayout.slotX(base + (col0 + cols - 1) * BackpackLayout.ROWS, bookMode);
+        int xa = guiLeft + BackpackLayout.slotX(base + col0 * BackpackLayout.ROWS, bookMode, guiWidth);
+        int xb = guiLeft + BackpackLayout.slotX(base + (col0 + cols - 1) * BackpackLayout.ROWS, bookMode, guiWidth);
         int x0 = Math.min(xa, xb) - BackpackLayout.BORDER;
         int x1 = Math.max(xa, xb) + BackpackLayout.SLOT + BackpackLayout.BORDER;
         int y0 = guiTop + BackpackLayout.Y0 - BackpackLayout.BORDER;

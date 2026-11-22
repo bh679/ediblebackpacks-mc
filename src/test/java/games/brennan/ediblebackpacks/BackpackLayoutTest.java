@@ -125,4 +125,17 @@ class BackpackLayoutTest {
         assertEquals(2, BackpackLayout.slotsInColumn(20, 2));
         assertEquals(0, BackpackLayout.slotsInColumn(20, 3));
     }
+
+    @Test
+    void theRightPanelFollowsAWiderGui() {
+        int merchant = 276;
+        assertEquals(merchant + BackpackLayout.GAP, BackpackLayout.slotX(BackpackLayout.PANEL_SLOTS, false, merchant));
+        assertEquals(BackpackLayout.slotX(0, false), BackpackLayout.slotX(0, false, merchant), "left panel hangs off x 0");
+        assertEquals(BackpackLayout.rightExtent(BackpackLayout.MAX_SLOTS, false) + 100,
+            BackpackLayout.rightExtent(BackpackLayout.MAX_SLOTS, false, merchant));
+        assertEquals(merchant, BackpackLayout.rightExtent(0, true, merchant), "no slots, no panel");
+        for (int i = 0; i < BackpackLayout.MAX_SLOTS; i++) {
+            assertEquals(BackpackLayout.slotX(i, true), BackpackLayout.slotX(i, true, BackpackLayout.GUI_WIDTH));
+        }
+    }
 }

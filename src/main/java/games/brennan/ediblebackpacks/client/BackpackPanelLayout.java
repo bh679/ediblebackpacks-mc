@@ -67,7 +67,7 @@ public final class BackpackPanelLayout {
         for (Slot slot : screen.getMenu().slots) {
             if (slot instanceof BackpackSlot backpack) {
                 ((SlotAccessor) (Object) slot)
-                    .ediblebackpacks$setX(BackpackLayout.slotX(backpack.backpackIndex(), bookMode));
+                    .ediblebackpacks$setX(BackpackLayout.slotX(backpack.backpackIndex(), bookMode, screen.getXSize()));
             }
         }
         return mode;
@@ -79,7 +79,7 @@ public final class BackpackPanelLayout {
         if (!ClientPanelState.panelsOpen()) return Mode.CLOSED;
         if (!ClientPanelState.recipeBookOpen()) return Mode.NORMAL;
         // The book has already pushed the GUI right; the panels get what is left over.
-        return screen.getGuiLeft() + BackpackLayout.rightExtent(unlocked, true) <= screen.width
+        return screen.getGuiLeft() + BackpackLayout.rightExtent(unlocked, true, screen.getXSize()) <= screen.width
             ? Mode.BOOK
             : Mode.HIDDEN;
     }

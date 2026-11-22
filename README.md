@@ -9,8 +9,11 @@ storage by one slot.**
 
 - Backpack storage renders as two 6×9 panels flanking the vanilla survival inventory
   screen (up to **108 slots**). Slots unlock down a column at a time, starting with the
-  column closest to your inventory and growing outward. Panels hide while the crafting
-  recipe book is open.
+  column closest to your inventory and growing outward. They also sit beside chests,
+  barrels, shulker boxes and the villager trade screen. With the recipe book open they
+  move to the right of the window.
+- When trading, picking a trade takes its price from your inventory first, then from your
+  backpack. Shift-clicking moves items between the backpack and your inventory.
 - Contents and unlocked slots persist through death **by default**. Servers can set
   `resetOnDeath = ON` in `serverconfig/ediblebackpacks-server.toml`, and host mods that
   bundle this mod (e.g. Dungeon Train) can steer the `DEFAULT` policy via

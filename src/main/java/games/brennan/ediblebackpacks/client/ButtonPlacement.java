@@ -93,10 +93,20 @@ public final class ButtonPlacement {
      */
     public static Pos resolve(ButtonAnchor anchor, int customX, int customY,
                               boolean containerScreen, boolean roomAbove) {
+        return resolve(anchor, customX, customY, containerScreen, roomAbove, BackpackLayout.GUI_WIDTH);
+    }
+
+    /**
+     * As above, on a GUI {@code guiWidth} wide. Only the cramped container fallback moves with
+     * the width: it is pinned to the title bar's right end, which on the 276-wide trade screen
+     * sits 100px further right than on a chest.
+     */
+    public static Pos resolve(ButtonAnchor anchor, int customX, int customY,
+                              boolean containerScreen, boolean roomAbove, int guiWidth) {
         if (anchor == ButtonAnchor.CUSTOM) return new Pos(customX, customY);
         if (roomAbove) return new Pos(ABOVE_PANEL_X, ABOVE_PANEL_Y);
         return containerScreen
-            ? new Pos(CONTAINER_X, CONTAINER_Y)
+            ? new Pos(CONTAINER_X + guiWidth - BackpackLayout.GUI_WIDTH, CONTAINER_Y)
             : new Pos(OFFHAND_X, OFFHAND_Y);
     }
 
