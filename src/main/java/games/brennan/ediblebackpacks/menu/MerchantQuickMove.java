@@ -19,8 +19,10 @@ import net.minecraft.world.item.ItemStack;
  *       moves whatever it could not place into the backpack, the same "extra space behind
  *       vanilla's destination" rule the survival inventory follows.</li>
  * </ul>
- * <p>The result slot is left to vanilla alone: a partial take there fires the trade's side
- * effects, and splitting one click across two passes would fire them twice.</p>
+ * <p>The result slot's quick-move is NOT split into a second pass: a take there fires the
+ * trade's side effects, and two passes would fire them twice. Instead {@link #moveResult}
+ * replaces vanilla's one {@code moveItemStackTo} call inside that click, so the trade still
+ * completes exactly once while its output can join a stack in the backpack.</p>
  */
 public final class MerchantQuickMove {
 
@@ -79,6 +81,56 @@ public final class MerchantQuickMove {
         }
         moved.setCount(before - inSlot.getCount());
         return moved.isEmpty() ? null : moved;
+    }
+
+    /** Calls vanilla's own {@code moveItemStackTo(stack, 3, 39, true)} for the result slot. */
+    @FunctionalInterface
+    public interface VanillaResultMove {
+        boolean move(ItemStack stack);
+    }
+
+    /**
+     * Shift-clicking the trade result. Vanilla only looks at the inventory, so a sale's emeralds
+     * landed in a free inventory slot even with a part-full stack of them in the backpack, and a
+     * full inventory took nothing at all. Order: top up inventory stacks, top up backpack
+     * stacks, vanilla (its own merge, then empty inventory slots), then empty backpack slots.
+     *
+     * @return whether any of {@code stack} moved, as vanilla's call would.
+     */
+    public static boolean moveResult(List<Slot> slots, ItemStack stack, VanillaResultMove vanilla) {
+        int start = BackpackQuickMove.backpackStart(slots);
+        if (start < INV_END) return vanilla.move(stack);
+        int end = start + BackpackLayout.MAX_SLOTS;
+        int before = stack.getCount();
+        mergeOnly(slots, stack, INV_START, INV_END);
+        mergeOnly(slots, stack, start, end);
+        if (!stack.isEmpty()) vanilla.move(stack);
+        if (!stack.isEmpty()) fillEmpty(slots, stack, start, end);
+        return stack.getCount() != before;
+    }
+
+    /** Tops up existing stacks of the same item in {@code [from, to)}, last slot first like vanilla's reverse merge. */
+    static void mergeOnly(List<Slot> slots, ItemStack stack, int from, int to) {
+        for (int i = to - 1; i >= from && !stack.isEmpty(); i--) {
+            Slot slot = slots.get(i);
+            ItemStack there = slot.getItem();
+            if (there.isEmpty() || !ItemStack.isSameItemSameComponents(stack, there) || !slot.mayPlace(stack)) continue;
+            int room = slot.getMaxStackSize(stack) - there.getCount();
+            if (room <= 0) continue;
+            int moved = Math.min(room, stack.getCount());
+            // A fresh stack through set(): a backpack slot's handler only saves on a set.
+            slot.set(there.copyWithCount(there.getCount() + moved));
+            stack.shrink(moved);
+        }
+    }
+
+    /** Places what is left into empty slots of {@code [from, to)}. */
+    static void fillEmpty(List<Slot> slots, ItemStack stack, int from, int to) {
+        for (int i = from; i < to && !stack.isEmpty(); i++) {
+            Slot slot = slots.get(i);
+            if (slot.hasItem() || !slot.mayPlace(stack)) continue;
+            slot.setByPlayer(stack.split(Math.min(stack.getCount(), slot.getMaxStackSize(stack))));
+        }
     }
 
     /**

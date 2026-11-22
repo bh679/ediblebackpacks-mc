@@ -1,5 +1,7 @@
 package games.brennan.ediblebackpacks.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import games.brennan.ediblebackpacks.menu.BackpackSlotAppender;
 import games.brennan.ediblebackpacks.menu.MerchantPayment;
 import games.brennan.ediblebackpacks.menu.MerchantQuickMove;
@@ -65,6 +67,22 @@ public abstract class MerchantMenuMixin {
         ItemStack moved = MerchantQuickMove.overflowIntoBackpack(
             self.slots, accessor::ediblebackpacks$invokeMoveItemStackTo, index);
         if (moved != null && cir.getReturnValue().isEmpty()) cir.setReturnValue(moved);
+    }
+
+    /**
+     * Vanilla's one move for a shift-click on the trade result (ordinal 0: the only
+     * {@code moveItemStackTo} in that method with reverse = true). See
+     * {@link MerchantQuickMove#moveResult}.
+     */
+    @WrapOperation(method = "quickMoveStack",
+            at = @At(value = "INVOKE", ordinal = 0,
+                     target = "Lnet/minecraft/world/inventory/MerchantMenu;moveItemStackTo(Lnet/minecraft/world/item/ItemStack;IIZ)Z"))
+    private boolean ediblebackpacks$resultIntoBackpack(MerchantMenu self, ItemStack stack, int from, int to,
+                                                       boolean reverse, Operation<Boolean> original) {
+        if (from != MerchantQuickMove.INV_START || to != MerchantQuickMove.INV_END || !reverse) {
+            return original.call(self, stack, from, to, reverse);
+        }
+        return MerchantQuickMove.moveResult(self.slots, stack, s -> original.call(self, s, from, to, reverse));
     }
 
     /** See {@link MerchantQuickMove#returnPayment}. */
