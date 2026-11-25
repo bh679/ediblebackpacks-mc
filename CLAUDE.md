@@ -89,8 +89,17 @@ At the slot cap `use()` still refuses, so the food is never eaten for nothing.
   overflow into the backpack runs ONLY when vanilla returned EMPTY, so its hotbar shuffle and
   partial moves are untouched; the output's ordinal-0 `moveItemStackTo` is wrapped by
   `moveResult`. `MerchantQuickMove` delegates its shared parts here.
-- `mixin/HopperMenuMixin` — the hopper's vanilla quick-move ends at `slots.size()` like the
-  chest's, so it is replaced with `ContainerQuickMove` (container size from the hopper).
+- `mixin/GrindstoneMenuMixin`, `StonecutterMenuMixin` (`@Shadow level` for the recipe test),
+  `LoomMenuMixin`, `CartographyTableMenuMixin` — the same workstation pattern, output wrapped.
+  `EnchantmentMenuMixin` and `BrewingStandMenuMixin` have no stackable output, so no wrap; they
+  pass `restToInventory = false` to `fromBackpack` (the rest of the stack goes to the inventory
+  only when the station took nothing). Vanilla's click loop repeats a quick-move while it
+  returns the same item: the brewing stand relies on that to fill one bottle slot per call, and
+  the enchanting table returns EMPTY to stop it after placing its one item.
+  `CrafterMenuMixin` injects every constructor (neither delegates) and uses the workstation
+  pattern with the grid as input; its display-only result slot sits after the inventory.
+- `mixin/HopperMenuMixin`, `mixin/DispenserMenuMixin` (dispenser + dropper) — handled like the chests with
+  `ContainerQuickMove` (the hopper's vanilla quick-move ends at `slots.size()`, which would pour it into the panels).
 - `menu/ContainerQuickMove` — the same job for the chest-shaped menus, parameterised by the
   container's size: container → inventory, inventory → container, backpack → container, each
   overflowing into the next place the player can see. Intercepting is mandatory, not cosmetic —

@@ -10,15 +10,17 @@ storage by one slot.**
 - Backpack storage renders as two 6×9 panels flanking the vanilla survival inventory
   screen (up to **108 slots**). Slots unlock down a column at a time, starting with the
   column closest to your inventory and growing outward. They also sit beside chests,
-  barrels, shulker boxes, hoppers, crafting tables, furnaces (and blast furnaces and
-  smokers), anvils, smithing tables and the villager trade screen. With the recipe book open they
+  barrels, shulker boxes, hoppers, dispensers, droppers, crafters, crafting tables, furnaces
+  (and blast furnaces and smokers), anvils, smithing tables, enchanting tables, grindstones,
+  stonecutters, looms, cartography tables, brewing stands and the villager trade screen. With the recipe book open they
   move to the right of the window.
 - When trading, picking a trade takes its price from your inventory first, then from your
   backpack. Shift-clicking moves items between the backpack and your inventory, and a
   shift-clicked trade result joins a matching stack in your backpack.
 - At a workstation, shift-clicking a backpack slot feeds the station the way the inventory
-  does (crafting grid, furnace input or fuel, anvil input, hopper), and a shift-clicked
-  craft, smelt, anvil or smithing result joins a matching stack in your backpack, or lands
+  does (crafting grid, furnace input or fuel, lapis, brewing fuel and bottles, loom and
+  cartography inputs, and so on), and a shift-clicked craft, smelt, anvil, smithing,
+  grindstone, stonecutter, loom or cartography result joins a matching stack in your backpack, or lands
   there when your inventory is full.
 - Contents and unlocked slots persist through death **by default**. Servers can set
   `resetOnDeath = ON` in `serverconfig/ediblebackpacks-server.toml`, and host mods that
