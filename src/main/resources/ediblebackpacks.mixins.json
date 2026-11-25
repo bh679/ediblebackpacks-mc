@@ -22,7 +22,8 @@
     "BrewingStandMenuMixin",
     "CrafterMenuMixin",
     "DispenserMenuMixin",
-    "ItemEntityMixin"
+    "ItemEntityMixin",
+    "ChiseledBookShelfBlockMixin"
   ],
   "client": [
     "EffectRenderingInventoryScreenMixin"
