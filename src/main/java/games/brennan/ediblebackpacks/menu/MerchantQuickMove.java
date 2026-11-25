@@ -40,20 +40,7 @@ public final class MerchantQuickMove {
      *         {@code null} when {@code index} is not a panel slot (vanilla handles it).
      */
     public static ItemStack fromBackpack(List<Slot> slots, BackpackQuickMove.StackMover mover, int index) {
-        int start = BackpackQuickMove.backpackStart(slots);
-        if (start < INV_END || index < start || index >= start + BackpackLayout.MAX_SLOTS) return null;
-        Slot slot = slots.get(index);
-        if (slot == null || !slot.hasItem()) return ItemStack.EMPTY;
-
-        ItemStack inSlot = slot.getItem();
-        ItemStack original = inSlot.copy();
-        if (!mover.move(inSlot, INV_START, INV_END, false)) return ItemStack.EMPTY;
-        if (inSlot.isEmpty()) {
-            slot.setByPlayer(ItemStack.EMPTY);
-        } else {
-            slot.setChanged();
-        }
-        return inSlot.getCount() == original.getCount() ? ItemStack.EMPTY : original;
+        return WorkstationQuickMove.fromBackpack(slots, mover, index, INV_START, INV_END, null);
     }
 
     /**
@@ -83,54 +70,15 @@ public final class MerchantQuickMove {
         return moved.isEmpty() ? null : moved;
     }
 
-    /** Calls vanilla's own {@code moveItemStackTo(stack, 3, 39, true)} for the result slot. */
-    @FunctionalInterface
-    public interface VanillaResultMove {
-        boolean move(ItemStack stack);
-    }
-
     /**
-     * Shift-clicking the trade result. Vanilla only looks at the inventory, so a sale's emeralds
-     * landed in a free inventory slot even with a part-full stack of them in the backpack, and a
-     * full inventory took nothing at all. Order: top up inventory stacks, top up backpack
-     * stacks, vanilla (its own merge, then empty inventory slots), then empty backpack slots.
+     * Shift-clicking the trade result: a sale's emeralds join a part-full stack of them in the
+     * backpack, and land there when the inventory is full. See
+     * {@link WorkstationQuickMove#moveResult}.
      *
      * @return whether any of {@code stack} moved, as vanilla's call would.
      */
-    public static boolean moveResult(List<Slot> slots, ItemStack stack, VanillaResultMove vanilla) {
-        int start = BackpackQuickMove.backpackStart(slots);
-        if (start < INV_END) return vanilla.move(stack);
-        int end = start + BackpackLayout.MAX_SLOTS;
-        int before = stack.getCount();
-        mergeOnly(slots, stack, INV_START, INV_END);
-        mergeOnly(slots, stack, start, end);
-        if (!stack.isEmpty()) vanilla.move(stack);
-        if (!stack.isEmpty()) fillEmpty(slots, stack, start, end);
-        return stack.getCount() != before;
-    }
-
-    /** Tops up existing stacks of the same item in {@code [from, to)}, last slot first like vanilla's reverse merge. */
-    static void mergeOnly(List<Slot> slots, ItemStack stack, int from, int to) {
-        for (int i = to - 1; i >= from && !stack.isEmpty(); i--) {
-            Slot slot = slots.get(i);
-            ItemStack there = slot.getItem();
-            if (there.isEmpty() || !ItemStack.isSameItemSameComponents(stack, there) || !slot.mayPlace(stack)) continue;
-            int room = slot.getMaxStackSize(stack) - there.getCount();
-            if (room <= 0) continue;
-            int moved = Math.min(room, stack.getCount());
-            // A fresh stack through set(): a backpack slot's handler only saves on a set.
-            slot.set(there.copyWithCount(there.getCount() + moved));
-            stack.shrink(moved);
-        }
-    }
-
-    /** Places what is left into empty slots of {@code [from, to)}. */
-    static void fillEmpty(List<Slot> slots, ItemStack stack, int from, int to) {
-        for (int i = from; i < to && !stack.isEmpty(); i++) {
-            Slot slot = slots.get(i);
-            if (slot.hasItem() || !slot.mayPlace(stack)) continue;
-            slot.setByPlayer(stack.split(Math.min(stack.getCount(), slot.getMaxStackSize(stack))));
-        }
+    public static boolean moveResult(List<Slot> slots, ItemStack stack, WorkstationQuickMove.VanillaResultMove vanilla) {
+        return WorkstationQuickMove.moveResult(slots, stack, INV_START, INV_END, vanilla);
     }
 
     /**

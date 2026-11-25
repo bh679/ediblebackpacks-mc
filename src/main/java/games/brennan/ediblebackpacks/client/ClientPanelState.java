@@ -3,7 +3,7 @@ package games.brennan.ediblebackpacks.client;
 import games.brennan.ediblebackpacks.network.PanelOpenPayload;
 import games.brennan.ediblebackpacks.registry.ModAttachments;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.gui.screens.recipebook.RecipeUpdateListener;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.network.PacketDistributor;
 
@@ -35,9 +35,12 @@ public final class ClientPanelState {
         PacketDistributor.sendToServer(new PanelOpenPayload(open));
     }
 
-    /** True while the survival inventory's crafting recipe book is open. */
+    /**
+     * True while the open screen's recipe book is showing: the survival inventory, the crafting
+     * table and the furnaces all carry one ({@link RecipeUpdateListener}).
+     */
     public static boolean recipeBookOpen() {
-        return Minecraft.getInstance().screen instanceof InventoryScreen screen
+        return Minecraft.getInstance().screen instanceof RecipeUpdateListener screen
             && screen.getRecipeBookComponent().isVisible();
     }
 }

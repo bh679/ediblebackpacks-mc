@@ -81,6 +81,16 @@ At the slot cap `use()` still refuses, so the food is never eaten for nothing.
   inventory, only from slots `mayPickup` allows (closed/locked/host-locked backpack never pays).
   Never index past slot 38 by number: Dungeon Train appends its extra-cost slots to the same
   menu, and mixin order decides whose slots come first.
+- `mixin/CraftingMenuMixin`, `mixin/AbstractFurnaceMenuMixin` (furnace, blast furnace, smoker),
+  `mixin/ItemCombinerMenuMixin` (anvil, smithing table) + `menu/WorkstationQuickMove` — the
+  merchant pattern generalised to any menu whose vanilla quick-move uses FIXED ranges: vanilla
+  keeps running; a panel click feeds the station's inputs (each mixin's callback, using
+  vanilla's own `canSmelt`/`isFuel`/`canMoveIntoInputSlots` tests) then the inventory; RETURN
+  overflow into the backpack runs ONLY when vanilla returned EMPTY, so its hotbar shuffle and
+  partial moves are untouched; the output's ordinal-0 `moveItemStackTo` is wrapped by
+  `moveResult`. `MerchantQuickMove` delegates its shared parts here.
+- `mixin/HopperMenuMixin` — the hopper's vanilla quick-move ends at `slots.size()` like the
+  chest's, so it is replaced with `ContainerQuickMove` (container size from the hopper).
 - `menu/ContainerQuickMove` — the same job for the chest-shaped menus, parameterised by the
   container's size: container → inventory, inventory → container, backpack → container, each
   overflowing into the next place the player can see. Intercepting is mandatory, not cosmetic —
@@ -138,7 +148,8 @@ MINOR-aligned (X.Y.0). Never `git tag` manually.
 
 `./gradlew test` covers two layers:
 - pure logic (policy + layout math), no Minecraft on the classpath;
-- `InventoryMenuQuickMoveTest` / `ChestMenuQuickMoveTest` — **real** `InventoryMenu`,
+- `InventoryMenuQuickMoveTest` / `ChestMenuQuickMoveTest` / `MerchantMenuQuickMoveTest` /
+  `WorkstationMenuQuickMoveTest` — **real** `InventoryMenu`,
   `ChestMenu` and `ShulkerBoxMenu` instances with the mixins applied, driven
   on an ephemeral server (`neoForge.unitTest` + NeoForge's `EphemeralTestServerProvider` +
   a `FakePlayer`), so a shift-click there is the call the server really runs. Levels are
