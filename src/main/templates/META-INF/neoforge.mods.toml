@@ -30,3 +30,8 @@ displayURL="https://github.com/bh679/ediblebackpacks-mc"
 # vanilla container slot sync carries the contents).
 [[mixins]]
 config="ediblebackpacks.mixins.json"
+
+# Optional compat mixins (BetterEnd's End Stone Smelter, ...). Each applies only when its
+# mod is installed (compat/CompatMixinPlugin); Edible Backpacks depends on none of them.
+[[mixins]]
+config="ediblebackpacks.compat.mixins.json"
