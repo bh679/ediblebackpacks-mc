@@ -1,0 +1,13 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "games.brennan.ediblebackpacks.compat.mixin",
+  "plugin": "games.brennan.ediblebackpacks.compat.CompatMixinPlugin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "betterend.EndStoneSmelterMenuMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

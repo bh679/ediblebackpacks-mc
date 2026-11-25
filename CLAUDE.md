@@ -100,6 +100,13 @@ At the slot cap `use()` still refuses, so the food is never eaten for nothing.
   pattern with the grid as input; its display-only result slot sits after the inventory.
 - `mixin/HopperMenuMixin`, `mixin/DispenserMenuMixin` (dispenser + dropper) — handled like the chests with
   `ContainerQuickMove` (the hopper's vanilla quick-move ends at `slots.size()`, which would pour it into the panels).
+- `compat/CompatMixinPlugin` + `ediblebackpacks.compat.mixins.json` (`required: false`) — optional
+  third-party compat. A mixin in `compat/mixin/<modid>/` applies only when `<modid>` is loaded
+  (`LoadingModList`), and is `@Pseudo` with a string target, so EB never compiles against the mod.
+  `compat/mixin/betterend/EndStoneSmelterMenuMixin` puts the panels on BetterEnd's End Stone
+  Smelter (0, 1 ingredients, 2 fuel, 3 result, 4..39 player). With no typed receiver for a
+  `@WrapOperation`, it copies the smelter's result branch around `WorkstationQuickMove#moveResult`
+  (BetterEnd 21.0.35): re-check that copy on a BetterEnd bump.
 - `menu/ContainerQuickMove` — the same job for the chest-shaped menus, parameterised by the
   container's size: container → inventory, inventory → container, backpack → container, each
   overflowing into the next place the player can see. Intercepting is mandatory, not cosmetic —

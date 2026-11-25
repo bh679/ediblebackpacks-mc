@@ -22,6 +22,8 @@ storage by one slot.**
   cartography inputs, and so on), and a shift-clicked craft, smelt, anvil, smithing,
   grindstone, stonecutter, loom or cartography result joins a matching stack in your backpack, or lands
   there when your inventory is full.
+- With BetterEnd installed, the panels also sit beside its End Stone Smelter, with the same
+  shift-click rules as a furnace. Edible Backpacks does not need BetterEnd.
 - Contents and unlocked slots persist through death **by default**. Servers can set
   `resetOnDeath = ON` in `serverconfig/ediblebackpacks-server.toml`, and host mods that
   bundle this mod (e.g. Dungeon Train) can steer the `DEFAULT` policy via
