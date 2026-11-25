@@ -52,6 +52,17 @@ public final class WorkstationQuickMove {
      */
     public static ItemStack fromBackpack(List<Slot> slots, BackpackQuickMove.StackMover mover, int index,
                                          int invStart, int invEnd, InputMove inputs) {
+        return fromBackpack(slots, mover, index, invStart, invEnd, inputs, true);
+    }
+
+    /**
+     * @param restToInventory whether what the station did not take still goes on to the
+     *                        inventory. {@code false} keeps it in the backpack whenever the station
+     *                        took any: the enchanting table takes ONE item from a stack, as vanilla
+     *                        does from the inventory, and the rest should stay where it was.
+     */
+    public static ItemStack fromBackpack(List<Slot> slots, BackpackQuickMove.StackMover mover, int index,
+                                         int invStart, int invEnd, InputMove inputs, boolean restToInventory) {
         int start = BackpackQuickMove.backpackStart(slots);
         if (start < invEnd || index < start || index >= start + BackpackLayout.MAX_SLOTS) return null;
         Slot slot = slots.get(index);
@@ -60,7 +71,7 @@ public final class WorkstationQuickMove {
         ItemStack inSlot = slot.getItem();
         ItemStack original = inSlot.copy();
         boolean moved = inputs != null && inputs.move(inSlot);
-        if (!inSlot.isEmpty()) moved |= mover.move(inSlot, invStart, invEnd, false);
+        if (!inSlot.isEmpty() && (restToInventory || !moved)) moved |= mover.move(inSlot, invStart, invEnd, false);
         if (!moved) return ItemStack.EMPTY;
         if (inSlot.isEmpty()) {
             slot.setByPlayer(ItemStack.EMPTY);
