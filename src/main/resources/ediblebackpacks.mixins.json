@@ -14,7 +14,8 @@
     "AbstractFurnaceMenuMixin",
     "ItemCombinerMenuMixin",
     "HopperMenuMixin",
-    "ItemEntityMixin"
+    "ItemEntityMixin",
+    "ChiseledBookShelfBlockMixin"
   ],
   "client": [
     "EffectRenderingInventoryScreenMixin"

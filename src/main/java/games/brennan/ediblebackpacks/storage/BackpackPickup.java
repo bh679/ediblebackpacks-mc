@@ -2,13 +2,17 @@ package games.brennan.ediblebackpacks.storage;
 
 import java.util.function.Predicate;
 
+import games.brennan.ediblebackpacks.EdibleBackpacksApi;
 import games.brennan.ediblebackpacks.config.EBConfig;
+import games.brennan.ediblebackpacks.registry.ModAttachments;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;
 
 /**
- * Ground-pickup routing into the backpack, wrapped around vanilla's {@code Inventory.add}
- * by {@code mixin/ItemEntityMixin}:
+ * Pickup routing into the backpack, wrapped around vanilla's {@code Inventory.add} by
+ * {@code mixin/ItemEntityMixin} (ground pickups) and {@code mixin/ChiseledBookShelfBlockMixin}
+ * (taking a book off a chiseled bookshelf, which vanilla drops when the inventory is full):
  * <ol>
  *   <li>top up backpack stacks that already hold this item — even while the inventory has
  *       room, so a stack the player parked in the backpack keeps collecting;</li>
@@ -29,6 +33,15 @@ import net.neoforged.neoforge.items.IItemHandler;
 public final class BackpackPickup {
 
     private BackpackPickup() {}
+
+    /**
+     * {@link #collect(BackpackData, ItemStack, Predicate)} for {@code player}'s live backpack.
+     * A host-locked backpack ({@link EdibleBackpacksApi#setAccessLock}) takes nothing: vanilla decides alone.
+     */
+    public static boolean collect(Player player, ItemStack stack, Predicate<ItemStack> vanillaAdd) {
+        if (EdibleBackpacksApi.isAccessLocked(player)) return vanillaAdd.test(stack);
+        return collect(player.getData(ModAttachments.BACKPACK), stack, vanillaAdd);
+    }
 
     /**
      * @param vanillaAdd the wrapped {@code Inventory.add} call
