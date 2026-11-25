@@ -27,7 +27,7 @@ import java.util.List;
  * vanilla screen loop (the slots live in the menu); only the chrome is drawn here.
  *
  * <p>Which screens those are is asked of the MENU, not the screen class: if the menu carries
- * backpack slots there is chrome to draw, and if it does not — a furnace, a modded GUI — there
+ * backpack slots there is chrome to draw, and if it does not — a brewing stand, a modded GUI — there
  * is nothing here to do. That way this can never disagree with what the mixins actually did.</p>
  *
  * <p>Also the place the panels get positioned for the frame: {@link BackpackPanelLayout}
