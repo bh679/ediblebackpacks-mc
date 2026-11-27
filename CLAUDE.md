@@ -78,7 +78,8 @@ At the slot cap `use()` still refuses, so the food is never eaten for nothing.
   trade twice): `MerchantQuickMove#moveResult` tops up inventory stacks, then backpack stacks,
   then vanilla, then empty backpack slots. Picking a trade (`tryMoveItems`
   RETURN) tops the payment slots up from the backpack after vanilla filled them from the
-  inventory, only from slots `mayPickup` allows (closed/locked/host-locked backpack never pays).
+  inventory, only from slots `mayPickup` allows (closed/locked/host-locked backpack never pays,
+  except items the host's take-out exception lets out).
   Never index past slot 38 by number: Dungeon Train appends its extra-cost slots to the same
   menu, and mixin order decides whose slots come first.
 - `mixin/CraftingMenuMixin`, `mixin/AbstractFurnaceMenuMixin` (furnace, blast furnace, smoker),
@@ -148,6 +149,11 @@ At the slot cap `use()` still refuses, so the food is never eaten for nothing.
   a real `playerTouch` on the ephemeral server.
 - `network/SlotCountPayload` — server→client unlocked-count sync (attachments don't
   auto-sync). Sent on login/respawn/dimension-change/eat (`event/BackpackEvents`).
+- Host access lock — `EdibleBackpacksApi.setAccessLock(Predicate<Player>)`: while true the slots
+  take nothing in, give nothing out, and pickups skip the backpack (Dungeon Train: while Zombified).
+  `setTakeOutException(BiPredicate<Player, ItemStack>)` lets chosen items still be taken out of a
+  locked backpack (`menu/BackpackSlot#mayPickup`); nothing extra goes in (Dungeon Train: Weakness
+  potions and the Totem of Weakness).
 - Death policy — `storage/BackpackPolicy.shouldResetOnDeath(configMode, hostDefault)`.
   Standalone default = persist. Host mods call
   `EdibleBackpacksApi.setHostDefaultResetOnDeath(true)` to make `DEFAULT` mean reset
