@@ -91,6 +91,12 @@ public final class BackpackSlot extends SlotItemHandler {
         return usableNow() && !EdibleBackpacksApi.isAccessLocked(owner);
     }
 
+    /** Interactable, or host-locked but holding something the host lets out ({@link EdibleBackpacksApi#isTakeOutAllowed}). */
+    private boolean takeableNow() {
+        if (!usableNow()) return false;
+        return !EdibleBackpacksApi.isAccessLocked(owner) || EdibleBackpacksApi.isTakeOutAllowed(owner, getItem());
+    }
+
     @Override
     public boolean isActive() {
         if (!usableNow()) return false;
@@ -114,7 +120,7 @@ public final class BackpackSlot extends SlotItemHandler {
 
     @Override
     public boolean mayPickup(Player player) {
-        return interactableNow() && super.mayPickup(player);
+        return takeableNow() && super.mayPickup(player);
     }
 
     @Override

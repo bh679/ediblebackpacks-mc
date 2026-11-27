@@ -1,7 +1,9 @@
 package games.brennan.ediblebackpacks;
 
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 /**
@@ -16,6 +18,7 @@ public final class EdibleBackpacksApi {
 
     private static volatile Boolean hostDefaultResetOnDeath = null;
     private static volatile Predicate<Player> accessLock = player -> false;
+    private static volatile BiPredicate<Player, ItemStack> takeOutException = (player, stack) -> false;
 
     private EdibleBackpacksApi() {}
 
@@ -41,5 +44,19 @@ public final class EdibleBackpacksApi {
     /** Whether the host has {@code player}'s backpack locked right now. False on a standalone install. */
     public static boolean isAccessLocked(Player player) {
         return player != null && accessLock.test(player);
+    }
+
+    /**
+     * Host mod's exception to {@link #setAccessLock}: items it answers true for can still be taken out of a
+     * locked backpack (e.g. Dungeon Train lets a Zombified player reach Weakness potions). Nothing extra goes
+     * in. Must give the same answer on the client and the server. Call once during setup.
+     */
+    public static void setTakeOutException(BiPredicate<Player, ItemStack> exception) {
+        takeOutException = exception == null ? (player, stack) -> false : exception;
+    }
+
+    /** Whether {@code stack} may leave {@code player}'s locked backpack. False on a standalone install. */
+    public static boolean isTakeOutAllowed(Player player, ItemStack stack) {
+        return player != null && !stack.isEmpty() && takeOutException.test(player, stack);
     }
 }
